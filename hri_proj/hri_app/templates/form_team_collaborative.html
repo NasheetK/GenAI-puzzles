@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div> Form Your Team </div>
+
+<div>Team name</div>
+<input type="text" id="team_name" placeholder="Type your team name here">
+
+<form id="team_form" method="POST" action="{% url 'form_team_collaborative_multi' %}">
+    <div id="player_container">
+        {% for i in "x"|center:count %}
+        <div class="player_row">
+            <label>Player {{ forloop.counter }}:</label>
+            <input type="text" name="member_{{ forloop.counter }}" placeholder="Type your name here">
+            {% if count > 3 %}
+                <button type="button" class="remove_btn" onclick="remove_row(this)">🗑️</button>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if add_flag %}
+        <button type="button" id="add_btn">➕ Add Player</button>
+    {% endif %}
+    <button type="submit">Submit</button>
+</form>
+
+<form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
+    <button type="submit">Exit</button>
+</form>
+
+<script>
+    const container = document.getElementById("player_container");
+    const add_btn = document.getElementById("add_btn");
+
+    let count = {{ count }};
+
+    const add_flag = {{ add_flag|yesno:"true,false" }};
+
+    if (add_flag) {
+        add_btn.addEventListener("click", function() {
+            count++;
+            const row = document.createElement("div");
+            row.classList.add("player_row");
+            row.innerHTML = `
+                <label>Player ${count}:</label>
+                <input type="text" name="member_${count}" placeholder="Type your name here">
+                <button type="button" class="remove_btn" onclick="remove_row(this)">🗑️</button>
+            `;
+            container.appendChild(row);
+            renumber_players();
+        });
+    }
+    function remove_row(btn) {
+        btn.parentElement.remove();
+        renumber_players();
+    }
+
+    function renumber_players() {
+        const rows = container.querySelectorAll(".player_row");
+        rows.forEach((row, index) => {
+            const label = row.querySelector("label");
+            const input = row.querySelector("input");
+            label.textContent = `Player ${index + 1}:`;
+            input.name = `member_${index + 1}`;
+        });
+        count = rows.length;
+    }
+</script>
+
+</body>
+</html>

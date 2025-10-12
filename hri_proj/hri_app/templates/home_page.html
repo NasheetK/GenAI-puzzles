@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<div> PuzzlePuzzle </div>
+
+<form action="{% url 'mode_selection' %}">
+    <button type="submit">Two Players</button>
+</form>
+
+<form action="{% url 'form_team_collaborative_multi' %}">
+    <button type="submit">More Players</button>
+</form>
+
+</body>
+</html>

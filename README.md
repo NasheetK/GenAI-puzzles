@@ -1,2 +1,9 @@
 # social_robotics
-group project for social robotics
+
+Course project for CPSC 676 Social Robotics in UNBC
+
+Members:
+Sizhe Rao
+Nasheet Khan
+
+

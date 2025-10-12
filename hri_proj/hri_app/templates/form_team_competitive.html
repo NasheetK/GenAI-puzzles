@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div> Enter Your Name </div>
+
+<form id="team_form" method="POST" action="{% url 'form_team_compete' %}">
+    <div id="player_container">
+        {% for i in "x"|center:2 %}
+        <div class="player_row">
+            <label>Team {{ forloop.counter }}:</label>
+            <input type="text" name="member_{{ forloop.counter }}" placeholder="Type your name here">
+        </div>
+        {% endfor %}
+    </div>
+
+   <button type="submit">Submit</button>
+</form>
+
+<form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
+    <button type="submit">Exit</button>
+</form>
+
+</body>
+</html>

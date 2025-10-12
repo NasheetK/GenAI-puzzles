@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div> PuzzlePuzzle </div>
+<form action="{% url 'form_team_compete' %}">
+    <button type="submit">Compete Mode</button>
+</form>
+
+<form action="{% url 'form_team_collaborative_two' %}">
+    <button type="submit">Collaborate Mode</button>
+</form>
+
+<form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
+    <button type="submit">Exit</button>
+</form>
+
+
+</body>
+</html>

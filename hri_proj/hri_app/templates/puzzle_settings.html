@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div> Design Your Own Puzzles </div>
+<form method="POST">
+<!--    {% csrf_token %}-->
+    <label>Difficulty:</label>
+    <select name="difficulty">
+        {% for d in difficulties %}
+            <option value="{{ d }}">{{ d }}</option>
+        {% endfor %}
+    </select><br>
+
+    <label>Character:</label>
+    <select name="character">
+        {% for c in characters %}
+            <option value="{{ c }}">{{ c }}</option>
+        {% endfor %}
+    </select><br>
+
+    <label>Activity:</label>
+    <select name="activity">
+        {% for a in activities %}
+            <option value="{{ a }}">{{ a }}</option>
+        {% endfor %}
+    </select><br>
+
+    <label>Background Color:</label>
+    <select name="bg_color">
+        {% for color in bg_colors %}
+            <option value="{{ color }}">{{ color }}</option>
+        {% endfor %}
+    </select><br>
+
+    <button type="submit">Start Puzzle</button>
+</form>
+
+<form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
+    <button type="submit">Exit</button>
+</form>
+
+</body>
+</html>
