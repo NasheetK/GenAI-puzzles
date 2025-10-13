@@ -7,9 +7,6 @@
 <body>
 <div> Form Your Team </div>
 
-<div>Team name</div>
-<input type="text" id="team_name" placeholder="Type your team name here">
-
 <form id="team_form" method="POST" action="{% url 'form_team_collaborative_multi' %}">
     <div id="player_container">
         {% for i in "x"|center:count %}

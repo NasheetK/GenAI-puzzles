@@ -11,3 +11,8 @@ admin.site.register(PuzzlePiece)
 class PuzzlePieceAdmin(admin.ModelAdmin):
     list_display = ('piece_id', 'puzzle_image', 'piece_number', 'piece_path')
     search_fields = ('piece_path')
+
+admin.site.register(PieceDragLog)
+class PieceDragLogAdmin(admin.ModelAdmin):
+    list_display = ('piece_id', 'x', 'y', 'timestamp', 'success')
+    search_fields = ('piece_id')

@@ -1,10 +1,143 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <style>
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+        }
+        .drag-container {
+            position: relative;
+            width: 600px;
+            height: 600px;
+        }
+
+        .draggable {
+            width: auto;
+            height: 200px;
+            position: absolute;
+            cursor: grab;
+            z-index: 1;
+        }
+
+        .locked {
+            cursor: default;
+        }
+
+        .dropzone {
+            position: absolute;
+            top: 300px;
+            left: 20px;
+            width: 300px; ;
+            height: 200px;
+            background-image: url('{% static "imgs/assignment1_img_full.jpg" %}');
+            background-size: contain;
+            background-position: left;
+            background-repeat: no-repeat;
+            opacity: 0.3;
+            border: 2px dashed #aaa;
+        }
+    </style>
+
 </head>
 <body>
+    <div> Solve the Puzzle </div>
+    <div>  Drag images below and drop them following the patterns shown. </div>
+    <div class="drag-container">
+        <img src="{% static 'imgs/assignment1_img_sub1.png' %}"
+             id="item_1" class="draggable" style="top:20px; left:20px;">
+        <img src="{% static 'imgs/assignment1_img_sub2.png' %}"
+             id="item_2" class="draggable" style="top:20px; left:180px;">
+        <div id="dropzone" class="dropzone"></div>
+    </div>
 
+    <form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
+        <button type="submit">Exit</button>
+    </form>
+
+    <script>
+        const items = document.querySelectorAll(".draggable"); // get all pieces for dragging
+
+        let offsetX, offsetY;
+        let current_item = null;
+
+        items.forEach(item => {
+
+            item.addEventListener("mousedown", e => {
+                if (item.classList.contains("locked")) return;
+                current_item = item;
+                current_item.style.cursor = "grabbing";
+                const rect = current_item.getBoundingClientRect();
+                offsetX = e.clientX - rect.left;
+                offsetY = e.clientY - rect.top;
+                current_item.style.position = "absolute";
+            });
+        });
+
+        document.addEventListener("mousemove", e => {
+            if (!current_item) return;
+            current_item.style.left = (e.clientX - offsetX) + "px";
+            current_item.style.top = (e.clientY - offsetY) + "px";
+        });
+
+        document.addEventListener("mouseup", async e => {
+            if (!current_item) return;
+            current_item.style.cursor = "grab";
+
+            // send the position data to backend for verification
+            const container_pos = current_item.parentElement.getBoundingClientRect();
+            // relative position for the piece
+            const drag_pos = current_item.getBoundingClientRect(); // get the location of the piece
+            const refined_x = drag_pos.left - container_pos.left + window.scrollX;
+            const refined_y = drag_pos.top - container_pos.top + window.scrollY;
+
+            // relative position for the dropzone
+            const dropzone_pos = dropzone.getBoundingClientRect(); // get the location of the dropzone
+            const refined_left = dropzone_pos.left - container_pos.left + window.scrollX;
+            const refined_top = dropzone_pos.top - container_pos.top + window.scrollY;
+            const refined_right = dropzone_pos.right - container_pos.right + window.scrollX;
+            const refined_bottom = dropzone_pos.bottom - container_pos.bottom + window.scrollY;
+
+            // construct the data send to the backend for position verification
+            const drag_pos_data = new FormData();
+            drag_pos_data.append("piece_id", current_item.id);
+            drag_pos_data.append("x", refined_x);
+            drag_pos_data.append("y", refined_y);
+            drag_pos_data.append("target_left", refined_left);
+            drag_pos_data.append("target_top", refined_top);
+            drag_pos_data.append("target_right", refined_right);
+            drag_pos_data.append("target_bottom", refined_bottom);
+
+            const response = await fetch("{% url 'solve_collab' %}", {
+                method: "POST",
+                body: drag_pos_data
+            });
+
+            // wait for the verification result
+            const data = await response.json();
+
+            // if the dragging position is correct, freeze the piece location
+            // if the dragging position is incorrect, keep the piece in the drop position
+            if (data.success) {
+                current_item.style.left = data.correct_x + "px";
+                current_item.style.top = data.correct_y + "px";
+                current_item.draggable = false; // freeze the piece
+                current_item.classList.add("locked");
+            }
+
+            current_item = null; // clear the dragging item
+
+            const all_locked = Array.from(items).every(item => item.draggable === false);
+            if (all_locked) {
+                alert("Puzzle completed!");
+                window.location.href = "{% url 'manual_rating' %}";
+            }
+        });
+
+    </script>
 </body>
 </html>

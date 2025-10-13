@@ -10,4 +10,12 @@ urlpatterns = [
     path('form_team_collab_multi/', views.form_team_collaborative_multi, name='form_team_collaborative_multi'),
     path('form_team_collab_two/', views.form_team_collaborative_two, name='form_team_collaborative_two'),
     path('puzzle_settings/', views.puzzle_settings, name='puzzle_settings'),
+    path('instruction/', views.instruction, name='instruction'),
+    path('solve_compete/', views.solve_compete, name='solve_compete'),
+    path('solve_collab/', views.solve_collab, name='solve_collab'),
+    path('manual_rating/', views.manual_rating, name='manual_rating'),
+    # path('manual_rating_multi/', views.manual_rating_multi, name='manual_rating_multi'),
+    # path('manual_rating_two/', views.manual_rating_two, name='manual_rating_two'),
+    # path('ai_rating/', views.ai_rating, name='ai_rating'),
+    # path('view_history/', views.view_history, name='view_history'),
 ]

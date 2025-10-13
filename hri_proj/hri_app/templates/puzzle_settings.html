@@ -7,7 +7,6 @@
 <body>
 <div> Design Your Own Puzzles </div>
 <form method="POST">
-<!--    {% csrf_token %}-->
     <label>Difficulty:</label>
     <select name="difficulty">
         {% for d in difficulties %}
@@ -36,7 +35,7 @@
         {% endfor %}
     </select><br>
 
-    <button type="submit">Start Puzzle</button>
+    <button type="submit">Create Puzzle</button>
 </form>
 
 <form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">

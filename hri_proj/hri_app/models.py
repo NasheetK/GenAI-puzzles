@@ -17,3 +17,13 @@ class PuzzlePiece(models.Model):
 
     def __str__(self):
         return f"{self.piece_id} - Piece {self.piece_number} - ({self.piece_path})"
+
+class PieceDragLog(models.Model):
+    piece_id = models.CharField(max_length=50)
+    x = models.FloatField()
+    y = models.FloatField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    success = models.BooleanField(default=False)
+    def __str__(self):
+        return f"Piece {self.piece_id} is dragged to ({self.x}, {self.y}) at {self.timestamp}. {self.success}"
+

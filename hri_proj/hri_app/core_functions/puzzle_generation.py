@@ -6,15 +6,17 @@ def create_puzzle(puzzle_config):
     mode = puzzle_config['mode']
     players = puzzle_config['players']
     difficulty_map = {
-        'Easy': 1,
-        'Medium': 2,
-        'Hard': 3
+        'Beginner': 1,
+        'Easy': 2,
+        'Medium': 3,
+        'Hard': 4,
+        'Expert': 5
     }
-    difficulty_value = difficulty_map.get(puzzle_config['difficulty'], 1)
+    difficulty_value = difficulty_map.get(puzzle_config['difficulty'], 1) # at least one puzzle
     if mode == 'competitive':
         img_amount = int(np.floor(difficulty_value))
     else:
-        img_amount = int(np.floor(players * difficulty_value / 2))
+        img_amount = max(int(np.floor(len(players) * difficulty_value / 2)), 1) # at least one puzzle
     full_img_list = []
     full_id_list = []
     piece_detail_list = []

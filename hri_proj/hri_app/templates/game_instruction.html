@@ -6,5 +6,15 @@
 </head>
 <body>
 
+{{ message }}
+
+<form method="POST">
+    <button type="submit">Start Puzzle</button>
+</form>
+
+<form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
+    <button type="submit">Exit</button>
+</form>
+
 </body>
 </html>
