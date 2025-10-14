@@ -36,6 +36,7 @@ def create_puzzle(puzzle_config):
         piece_detail_list.append(piece_detail_with_id)
     return full_img_list, full_id_list, piece_detail_list
 
+
 def split_to_pieces(img_path, img_id, row=4, col=4, target_size=(256, 256)):
     im = Image.open(img_path)
     out_dir = 'hri_app/static/imgs/' + str(img_id)

@@ -1,6 +1,7 @@
 from django.db import models
-
 # Create your models here.
+
+
 class PuzzleImage(models.Model):
     img_id = models.CharField(max_length=32, primary_key=True) # UUID4
     img_path = models.CharField(max_length=255)
@@ -8,6 +9,7 @@ class PuzzleImage(models.Model):
 
     def __str__(self):
         return f"{self.img_id} - {self.img_path}"
+
 
 class PuzzlePiece(models.Model):
     piece_id = models.AutoField(primary_key=True)
@@ -18,12 +20,44 @@ class PuzzlePiece(models.Model):
     def __str__(self):
         return f"{self.piece_id} - Piece {self.piece_number} - ({self.piece_path})"
 
+
 class PieceDragLog(models.Model):
     piece_id = models.CharField(max_length=50)
     x = models.FloatField()
     y = models.FloatField()
     timestamp = models.DateTimeField(auto_now_add=True)
     success = models.BooleanField(default=False)
+
     def __str__(self):
         return f"Piece {self.piece_id} is dragged to ({self.x}, {self.y}) at {self.timestamp}. {self.success}"
+
+
+class PersonalRecordDetail(models.Model):
+    detail_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=20)
+    puzzle_id = models.CharField(max_length=50)
+    action = models.CharField(max_length=50) # start, piece matched, completed, terminated
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.puzzle_id} - {self.action}"
+
+
+class PersonalRecordGeneral(models.Model):
+    record_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=20)
+    team_member = models.CharField(max_length=255)
+    game_mode = models.CharField(max_length=20)
+    difficulty = models.CharField(max_length=20)
+    character = models.CharField(max_length=20)
+    activity = models.CharField(max_length=20)
+    bg_color = models.CharField(max_length=20)
+    puzzle_amount = models.IntegerField()
+    time_start = models.DateTimeField(auto_now_add=False)
+    time_end = models.DateTimeField(auto_now_add=True)
+    self_rate_score = models.IntegerField(default=0)
+    ai_rate_score = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.name} - {self.time_start} to {self.time_end} - {self.puzzle_amount} puzzles"
 

@@ -6,18 +6,22 @@ from django.views.decorators.csrf import csrf_exempt
 from .core_functions.puzzle_generation import *
 from .core_functions.ai_rating import *
 from .models import *
-
 # Create your views here.
+
+
 def home(request):
     return render(request, 'home_page.html')
+
 
 @csrf_exempt  # Disable CSRF for API endpoints (for simplicity)
 def clear_and_exit(request):
     request.session.clear()
     return render(request, 'home_page.html')
 
+
 def mode_seletion(request):
     return render(request, 'mode_selection.html')
+
 
 @csrf_exempt
 def form_team_compete(request):
@@ -28,8 +32,10 @@ def form_team_compete(request):
         return redirect('puzzle_settings')
     return render(request, 'form_team_competitive.html')
 
+
 def form_team_collaborative_two(request):
     return render(request, 'form_team_collaborative.html', {'count': 2, 'add_flag': False})
+
 
 @csrf_exempt
 def form_team_collaborative_multi(request):
@@ -39,6 +45,7 @@ def form_team_collaborative_multi(request):
         request.session['mode'] = 'collaborative'
         return redirect('puzzle_settings')
     return render(request, 'form_team_collaborative.html', {'count': 3, 'add_flag': True})
+
 
 @csrf_exempt
 def puzzle_settings(request):
@@ -93,6 +100,7 @@ def puzzle_settings(request):
         'bg_colors': bg_colors
     })
 
+
 @csrf_exempt
 def instruction(request):
     players = request.session.get('players', [])
@@ -114,6 +122,7 @@ def instruction(request):
             return redirect('solve_collab')
 
     return render(request, 'game_instruction.html', {'message': message})
+
 
 @csrf_exempt
 def solve_collab(request):
@@ -162,6 +171,24 @@ def solve_collab(request):
 
         # record to log and return the verification results
         PieceDragLog.objects.create(piece_id=piece_full_id, x=x, y=y, timestamp=timezone.now(), success=success)
+
+        if success:
+            full_info_list = request.session.get('full_info_list', [])
+            players = request.session.get('players', [])
+            players = ['test_name_1', 'test_name_2']
+            index = int(request.POST.get("index"))
+            action = 'piece_matched'
+            # print(full_info_list)
+            puzzle_id = full_info_list[index][1]  # get puzzle_id
+
+            for name in players:
+                PersonalRecordDetails.objects.create(
+                    name=name,
+                    puzzle_id=puzzle_id,
+                    action=action,
+                    timestamp=timezone.now()
+                )
+
         return JsonResponse({
             "success": bool(success),
             "correct_x": float(target_x),
@@ -172,12 +199,41 @@ def solve_collab(request):
     full_info_list = list(zip(full_img_list, full_id_list, piece_detail_list))
     request.session['full_info_list'] = full_info_list
     puzzle_config['full_info_list'] = full_info_list
-    print(full_info_list)
+    # print(full_info_list)
     return render(request, "solve_puzzle_collaborative.html", {'puzzle_config': puzzle_config})
+
+
+@csrf_exempt
+def save_personal_record_details(request):
+    if request.method == "POST":
+        full_info_list = request.session.get('full_info_list', [])
+        players = request.session.get('players', [])
+        players = ['test_name_1', 'test_name_2']
+        index = int(request.POST.get("index"))
+        action = request.POST.get("action")
+        puzzle_id = full_info_list[index][1] # get puzzle_id
+
+        print(111111)
+
+        for name in players:
+            PersonalRecordDetails.objects.create(
+                name=name,
+                puzzle_id=puzzle_id,
+                action=action,
+                timestamp=timezone.now()
+            )
+        return JsonResponse({'status': 'ok'})
+    return JsonResponse({'status': 'error', 'message': 'invalid method'})
+
+
+@csrf_exempt
+def save_personal_record_general(request):
+    assert NotImplementedError
 
 @csrf_exempt
 def solve_compete(request):
     assert NotImplementedError
+
 
 def manual_rating(request):
     players = request.session.get('players', [])

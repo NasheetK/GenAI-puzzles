@@ -46,18 +46,18 @@
             row.innerHTML = `
                 <label>Player ${count}:</label>
                 <input type="text" name="member_${count}" placeholder="Type your name here">
-                <button type="button" class="remove_btn" onclick="remove_row(this)">🗑️</button>
+                <button type="button" class="remove_btn" onclick="removeRow(this)">🗑️</button>
             `;
             container.appendChild(row);
-            renumber_players();
+            renumberPlayers();
         });
     }
-    function remove_row(btn) {
+    function removeRow(btn) {
         btn.parentElement.remove();
-        renumber_players();
+        renumberPlayers();
     }
 
-    function renumber_players() {
+    function renumberPlayers() {
         const rows = container.querySelectorAll(".player_row");
         rows.forEach((row, index) => {
             const label = row.querySelector("label");

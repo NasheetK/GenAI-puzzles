@@ -45,12 +45,22 @@
             cursor: default;
             box-shadow: 0 0 3px rgba(0,255,0,0.5);
         }
+        .timer {
+            font-size:48px;
+            padding:20px 30px;
+            background:white;
+            border-radius:8px;
+            box-shadow:0 6px 18px rgba(0,0,0,0.08);
+        }
+
     </style>
 
 </head>
 <body>
     <div> Solve the Puzzles </div>
     <div>  Drag images below and drop them following the patterns shown. </div>
+
+    <div class="timer" id="timer">00:00</div>
 
     <div class="tab">
       {% for img, img_id, pieces in puzzle_config.full_info_list %}
@@ -91,7 +101,7 @@
         let completed = Array(puzzle_count).fill(false);
         let current_tab = 0;
 
-        function showTab(index) {
+        async function showTab(index) {
             if (index > 0 && !completed[index - 1]) {
                 alert(`Please complete Puzzle ${index} first!`);
                 return;
@@ -107,20 +117,42 @@
             tabs[index].style.display = "block";
             buttons[index].classList.add("active");
 
+            send_record_to_log("start", index);
+
+            // start puzzle solving process
             puzzle_solving();
         }
 
         // Check if all pieces in a puzzle are locked
-        function checkPuzzleComplete(index) {
+        async function checkPuzzleComplete(index) {
             const items = document.querySelectorAll(`#tab${index} .pieces img`);
             const allLocked = Array.from(items).every(i => i.draggable === false);
             if (allLocked) {
                 completed[index] = true;
                 alert('Puzzle ' + (index + 1) + ' completed!');
+                send_record_to_log("completed", index);
+
                 print(index, puzzle_count)
                 if (index === puzzle_count) {
                     window.location.href = "{% url 'manual_rating' %}";
                 }
+            }
+        }
+
+        // send status record to log
+        async function send_record_to_log(action, index) {
+            try {
+                const record_data = new FormData();
+                record_data.append("action", action);
+                record_data.append("index", index);
+                const response = await fetch("{% url 'save_personal_record_details' %}", {
+                    method: "POST",
+                    body: record_data,
+                });
+
+                const result = await response.json();
+            } catch (err) {
+                console.error("Error sending start record:", err);
             }
         }
 
@@ -169,6 +201,7 @@
                 // const refined_bottom = dropzone_pos.bottom - container_pos.bottom + window.scrollY;
 
                 const drag_pos_data = new FormData();
+                drag_pos_data.append("index", current_tab);
                 drag_pos_data.append("piece_id", current_item.id);
                 drag_pos_data.append("x", piece_pos.left);
                 drag_pos_data.append("y", piece_pos.top);
@@ -205,6 +238,41 @@
                 current_item = null;
             });
         }
+
+        // add timer for full puzzle solving process
+        const start_minutes = 1;
+        const next_url = "{% url 'manual_rating' %}";
+
+        let remaining_seconds = start_minutes * 60;
+        const timer_full_puzzle = document.getElementById('timer');
+        let timer_interval = null; // update the timer by one second
+
+        function formatTime(totalSeconds) {
+          const m = Math.floor(totalSeconds / 60);
+          const s = totalSeconds % 60;
+          const mm = String(m).padStart(2, '0');
+          const ss = String(s).padStart(2, '0');
+          return `${mm}:${ss}`;
+        }
+
+        function tick() {
+          timer_full_puzzle.textContent = formatTime(remaining_seconds);
+
+          if (remaining_seconds <= 0) {
+            clearInterval(timer_interval);
+            alert('Timeout!');
+            send_record_to_log("terminated", current_tab);
+            window.location.href = next_url;
+            return;
+          }
+
+          remaining_seconds -= 1;
+        }
+
+        // update the timer
+        tick();
+        timer_interval = setInterval(tick, 1000);
+
     </script>
 </body>
 </html>
