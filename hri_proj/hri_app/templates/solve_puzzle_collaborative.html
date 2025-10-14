@@ -6,138 +6,205 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <style>
-        button {
-            padding: 15px 30px;
-            font-size: 18px;
+        .tab { display: flex; gap: 8px; margin-bottom: 10px; }
+        .tab button {
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            background: #f5f5f5;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 600;
         }
-        .drag-container {
-            position: relative;
-            width: 600px;
-            height: 600px;
-        }
+        .tab button.active { background: #4285f4; color: white; }
 
-        .draggable {
-            width: auto;
-            height: 200px;
-            position: absolute;
-            cursor: grab;
-            z-index: 1;
-        }
+        .tabcontent { display: none; }
 
-        .locked {
-            cursor: default;
-        }
-
-        .dropzone {
-            position: absolute;
-            top: 300px;
-            left: 20px;
-            width: 300px; ;
-            height: 200px;
-            background-image: url('{% static "imgs/assignment1_img_full.jpg" %}');
-            background-size: contain;
-            background-position: left;
-            background-repeat: no-repeat;
+        .full_image {
             opacity: 0.3;
-            border: 2px dashed #aaa;
+            width: 400px;
+            height: 400px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+        .pieces {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            width: 400px;
+            margin: 0 auto;
+        }
+        .pieces img {
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 0 3px rgba(0,0,0,0.2);
+            cursor: grab;
+        }
+        .pieces img.locked {
+            opacity: 0.7;
+            cursor: default;
+            box-shadow: 0 0 3px rgba(0,255,0,0.5);
         }
     </style>
 
 </head>
 <body>
-    <div> Solve the Puzzle </div>
+    <div> Solve the Puzzles </div>
     <div>  Drag images below and drop them following the patterns shown. </div>
-    <div class="drag-container">
-        <img src="{% static 'imgs/assignment1_img_sub1.png' %}"
-             id="item_1" class="draggable" style="top:20px; left:20px;">
-        <img src="{% static 'imgs/assignment1_img_sub2.png' %}"
-             id="item_2" class="draggable" style="top:20px; left:180px;">
-        <div id="dropzone" class="dropzone"></div>
+
+    <div class="tab">
+      {% for img, img_id, pieces in puzzle_config.full_info_list %}
+        <button class="tablinks" onclick="showTab({{ forloop.counter0 }})">
+          Puzzle {{ forloop.counter }}
+        </button>
+      {% endfor %}
     </div>
+
+    {% for img, img_id, pieces in puzzle_config.full_info_list %}
+      <div class="tabcontent" id="tab{{ forloop.counter0 }}">
+        <div class="full_image_container">
+            <img src="{% static img %}" class="full_image"
+                 id="tab{{ forloop.counter0 }}_dropzone"
+                 draggable="false" alt="Full puzzle">
+        </div>
+
+        <div class="pieces">
+            {% for piece_id, piece in pieces %}
+                <div class="piece">
+                    <img src="{% static piece %}"
+                         id="{{ img_id }}_{{ piece_id }}"
+                         draggable="true" alt="Piece {{ piece_id }}">
+                </div>
+            {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
 
     <form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
         <button type="submit">Exit</button>
     </form>
 
     <script>
-        const items = document.querySelectorAll(".draggable"); // get all pieces for dragging
 
-        let offsetX, offsetY;
-        let current_item = null;
+        const full_info_list = {{ puzzle_config.full_info_list|safe }};
+        const puzzle_count = {{ full_info_list|length }};
+        let completed = Array(puzzle_count).fill(false);
+        let current_tab = 0;
 
-        items.forEach(item => {
-
-            item.addEventListener("mousedown", e => {
-                if (item.classList.contains("locked")) return;
-                current_item = item;
-                current_item.style.cursor = "grabbing";
-                const rect = current_item.getBoundingClientRect();
-                offsetX = e.clientX - rect.left;
-                offsetY = e.clientY - rect.top;
-                current_item.style.position = "absolute";
-            });
-        });
-
-        document.addEventListener("mousemove", e => {
-            if (!current_item) return;
-            current_item.style.left = (e.clientX - offsetX) + "px";
-            current_item.style.top = (e.clientY - offsetY) + "px";
-        });
-
-        document.addEventListener("mouseup", async e => {
-            if (!current_item) return;
-            current_item.style.cursor = "grab";
-
-            // send the position data to backend for verification
-            const container_pos = current_item.parentElement.getBoundingClientRect();
-            // relative position for the piece
-            const drag_pos = current_item.getBoundingClientRect(); // get the location of the piece
-            const refined_x = drag_pos.left - container_pos.left + window.scrollX;
-            const refined_y = drag_pos.top - container_pos.top + window.scrollY;
-
-            // relative position for the dropzone
-            const dropzone_pos = dropzone.getBoundingClientRect(); // get the location of the dropzone
-            const refined_left = dropzone_pos.left - container_pos.left + window.scrollX;
-            const refined_top = dropzone_pos.top - container_pos.top + window.scrollY;
-            const refined_right = dropzone_pos.right - container_pos.right + window.scrollX;
-            const refined_bottom = dropzone_pos.bottom - container_pos.bottom + window.scrollY;
-
-            // construct the data send to the backend for position verification
-            const drag_pos_data = new FormData();
-            drag_pos_data.append("piece_id", current_item.id);
-            drag_pos_data.append("x", refined_x);
-            drag_pos_data.append("y", refined_y);
-            drag_pos_data.append("target_left", refined_left);
-            drag_pos_data.append("target_top", refined_top);
-            drag_pos_data.append("target_right", refined_right);
-            drag_pos_data.append("target_bottom", refined_bottom);
-
-            const response = await fetch("{% url 'solve_collab' %}", {
-                method: "POST",
-                body: drag_pos_data
-            });
-
-            // wait for the verification result
-            const data = await response.json();
-
-            // if the dragging position is correct, freeze the piece location
-            // if the dragging position is incorrect, keep the piece in the drop position
-            if (data.success) {
-                current_item.style.left = data.correct_x + "px";
-                current_item.style.top = data.correct_y + "px";
-                current_item.draggable = false; // freeze the piece
-                current_item.classList.add("locked");
+        function showTab(index) {
+            if (index > 0 && !completed[index - 1]) {
+                alert(`Please complete Puzzle ${index} first!`);
+                return;
             }
 
-            current_item = null; // clear the dragging item
+            current_tab = index;
+            const tabs = document.querySelectorAll(".tabcontent");
+            const buttons = document.querySelectorAll(".tab button");
 
-            const all_locked = Array.from(items).every(item => item.draggable === false);
-            if (all_locked) {
-                alert("Puzzle completed!");
-                window.location.href = "{% url 'manual_rating' %}";
+            tabs.forEach(t => t.style.display = "none");
+            buttons.forEach(b => b.classList.remove("active"));
+
+            tabs[index].style.display = "block";
+            buttons[index].classList.add("active");
+
+            puzzle_solving();
+        }
+
+        // Check if all pieces in a puzzle are locked
+        function checkPuzzleComplete(index) {
+            const items = document.querySelectorAll(`#tab${index} .pieces img`);
+            const allLocked = Array.from(items).every(i => i.draggable === false);
+            if (allLocked) {
+                completed[index] = true;
+                alert('Puzzle ' + (index + 1) + ' completed!');
+                print(index, puzzle_count)
+                if (index === puzzle_count) {
+                    window.location.href = "{% url 'manual_rating' %}";
+                }
             }
-        });
+        }
 
+        function puzzle_solving() {
+            const items = document.querySelectorAll(`#tab${current_tab} .pieces img`);
+            let offsetX, offsetY;
+            let current_item = null;
+
+            items.forEach(item => {
+                item.addEventListener("mousedown", e => {
+                    if (item.classList.contains("locked")) return;
+
+                    current_item = item;
+                    current_item.style.cursor = "grabbing";
+                    const rect = current_item.getBoundingClientRect();
+                    offsetX = e.clientX - rect.left;
+                    offsetY = e.clientY - rect.top;
+                    current_item.style.width = rect.width + "px";
+                    current_item.style.height = rect.height + "px";
+                    current_item.style.position = "absolute";
+                    current_item.style.zIndex = 1000;
+                    // document.body.appendChild(current_item);
+                });
+            });
+
+            document.addEventListener("mousemove", e => {
+                if (!current_item) return;
+                current_item.style.left = (e.clientX - offsetX) + "px";
+                current_item.style.top = (e.clientY - offsetY) + "px";
+            });
+
+            document.addEventListener("mouseup", async e => {
+                if (!current_item) return;
+                current_item.style.cursor = "grab";
+
+                // const container_pos = current_item.parentElement.getBoundingClientRect();
+                const piece_pos = current_item.getBoundingClientRect();
+                // const refined_x = piece_pos.left - container_pos.left + window.scrollX;
+                // const refined_y = piece_pos.top - container_pos.top + window.scrollY;
+
+                const dropzone = document.getElementById("tab"+current_tab+"_dropzone");
+                const dropzone_pos = dropzone.getBoundingClientRect();
+                // const refined_left = dropzone_pos.left - container_pos.left + window.scrollX;
+                // const refined_top = dropzone_pos.top - container_pos.top + window.scrollY;
+                // const refined_right = dropzone_pos.right - container_pos.right + window.scrollX;
+                // const refined_bottom = dropzone_pos.bottom - container_pos.bottom + window.scrollY;
+
+                const drag_pos_data = new FormData();
+                drag_pos_data.append("piece_id", current_item.id);
+                drag_pos_data.append("x", piece_pos.left);
+                drag_pos_data.append("y", piece_pos.top);
+                drag_pos_data.append("target_left", dropzone_pos.left);
+                drag_pos_data.append("target_top", dropzone_pos.top);
+                drag_pos_data.append("target_right", dropzone_pos.right);
+                drag_pos_data.append("target_bottom", dropzone_pos.bottom);
+                // drag_pos_data.append("x", refined_x);
+                // drag_pos_data.append("y", refined_y);
+                // drag_pos_data.append("target_left", refined_left);
+                // drag_pos_data.append("target_top", refined_top);
+                // drag_pos_data.append("target_right", refined_right);
+                // drag_pos_data.append("target_bottom", refined_bottom);
+
+                try {
+                    const response = await fetch("{% url 'solve_collab' %}", {
+                        method: "POST",
+                        body: drag_pos_data
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        current_item.style.left = data.correct_x + "px";
+                        current_item.style.top = data.correct_y + "px";
+                        current_item.draggable = false;
+                        current_item.classList.add("locked");
+
+                        checkPuzzleComplete(current_tab);
+                    }
+                } catch (err) {
+                    console.error("Error verifying piece position:", err);
+                }
+
+                current_item = null;
+            });
+        }
     </script>
 </body>
 </html>

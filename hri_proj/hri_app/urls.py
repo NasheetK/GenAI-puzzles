@@ -19,3 +19,4 @@ urlpatterns = [
     # path('ai_rating/', views.ai_rating, name='ai_rating'),
     # path('view_history/', views.view_history, name='view_history'),
 ]
+

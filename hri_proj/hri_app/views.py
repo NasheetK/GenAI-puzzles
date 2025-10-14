@@ -118,44 +118,62 @@ def instruction(request):
 @csrf_exempt
 def solve_collab(request):
     tolerance = 10 # tolerance for slight differences between drop location and target location
+
+    players = request.session.get('players', [])
+    mode = request.session.get('mode', '')
+    difficulty = request.POST.get('difficulty')
+    character = request.POST.get('character')
+    activity = request.POST.get('activity')
+    bg_color = request.POST.get('bg_color')
+
+    puzzle_config = {
+        'difficulty': difficulty,
+        'character': character,
+        'activity': activity,
+        'bg_color': bg_color,
+        'players': players,
+        'mode': mode
+    }
+
     if request.method == "POST":
-        piece_id = request.POST.get("piece_id")
+
+        piece_full_id = request.POST.get("piece_id")
+        piece_id = int(piece_full_id.split('_')[1])
         x = float(request.POST.get("x", 0))
         y = float(request.POST.get("y", 0))
         target_left = float(request.POST.get("target_left", 0))
         target_top = float(request.POST.get("target_top", 0))
         target_right = float(request.POST.get("target_right", 0))
         target_bottom = float(request.POST.get("target_bottom", 0))
-
-        print(target_left, target_top, target_right, target_bottom)
+        print(piece_full_id, target_left, target_top, target_right, target_bottom)
         width = abs(target_right - target_left)
         height = abs(target_bottom - target_top)
-        # print(piece_id)
-        if piece_id == 'item_1':
-            target_x = target_left
-            target_y = target_top
-            print(x, y, target_x, target_y)
-            success = (abs(x - target_x) <= tolerance and abs(y - target_y) <= tolerance)
-        elif piece_id == 'item_2':
-            target_x = target_left + width / 2.0
-            target_y = target_top
-            print(x, y, target_x, target_y)
-            success = (abs(x - target_x) <= tolerance) and (abs(y - target_y) <= tolerance)
-        else:
-            target_x = 0
-            target_y = 0
-            success = False
+        grid_width = width / 4
+        grid_height = height / 4
+
+        target_row = piece_id // 4
+        target_col = np.mod(piece_id, 4)
+        print(target_row, target_col, grid_height, grid_width)
+
+        target_x = target_col * grid_width + target_left
+        target_y = target_row * grid_height + target_top
+        success = (abs(x - target_x) <= tolerance and abs(y - target_y) <= tolerance)
+        print(x, y, target_x, target_y, success)
 
         # record to log and return the verification results
-        PieceDragLog.objects.create(piece_id=piece_id, x=x, y=y, timestamp=timezone.now(), success=success)
-        # print(success, target_x, target_y)
+        PieceDragLog.objects.create(piece_id=piece_full_id, x=x, y=y, timestamp=timezone.now(), success=success)
         return JsonResponse({
-            "success": success,
-            "correct_x": target_x,
-            "correct_y": target_y,
+            "success": bool(success),
+            "correct_x": float(target_x),
+            "correct_y": float(target_y),
         })
 
-    return render(request, "solve_puzzle_collaborative.html")
+    full_img_list, full_id_list, piece_detail_list = create_puzzle(puzzle_config)
+    full_info_list = list(zip(full_img_list, full_id_list, piece_detail_list))
+    request.session['full_info_list'] = full_info_list
+    puzzle_config['full_info_list'] = full_info_list
+    print(full_info_list)
+    return render(request, "solve_puzzle_collaborative.html", {'puzzle_config': puzzle_config})
 
 @csrf_exempt
 def solve_compete(request):
@@ -167,3 +185,4 @@ def manual_rating(request):
         return render(request, "manual_rating_multi_players.html")
     else:
         return render(request, "manual_rating_two_players.html")
+
