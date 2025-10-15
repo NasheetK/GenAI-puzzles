@@ -58,7 +58,7 @@ def puzzle_settings(request):
     bg_colors = ['Red', 'Green', 'Blue', 'Yellow']
 
     players = request.session.get('players', [])
-    mode = request.session.get('mode', '')
+    mode = request.session.get('mode', 'collaborative')
 
     if request.method == "POST":
 
@@ -107,7 +107,7 @@ def puzzle_settings(request):
 @csrf_exempt
 def instruction(request):
     players = request.session.get('players', [])
-    mode = request.session.get('mode', '')
+    mode = request.session.get('mode', 'collaborative')
     full_img_list = request.session.get('full_img_list', [])
     count = len(full_img_list)
 
@@ -132,7 +132,7 @@ def solve_collab(request):
     tolerance = 10 # tolerance for slight differences between drop location and target location
 
     players = request.session.get('players', [])
-    mode = request.session.get('mode', '')
+    mode = request.session.get('mode', 'collaborative')
     difficulty = request.POST.get('difficulty')
     character = request.POST.get('character')
     activity = request.POST.get('activity')
@@ -239,11 +239,12 @@ def solve_compete(request):
 
 def manual_rating(request):
     players = request.session.get('players', [])
+    mode = request.session.get('mode', 'collaborative')
     # print(players)
     if len(players) > 2:
-        return render(request, "manual_rating_multi_players.html", {'players': players})
+        return render(request, "manual_rating_multi_players.html", {'players': players, 'mode': mode})
     else:
-        return render(request, "manual_rating_two_players.html", {'players': players})
+        return render(request, "manual_rating_two_players.html", {'players': players, 'mode': mode})
 
 
 def get_records_from_db(name, puzzle_id_list):
@@ -335,27 +336,46 @@ def submit_ratings(request):
     return JsonResponse({'status': 'error', 'message': 'invalid method'})
 
 
+@csrf_exempt
 def ai_rating(request):
     ai_task_score = request.session.get('ai_task_score', {})
     players = request.session.get('players', [])
-    mode = request.session.get('mode', [])
-    return render(request, 'ai_rating.html', {'players': players, 'mode': mode, 'ai_task_score': ai_task_score})
+    mode = request.session.get('mode', 'collaborative')
+    message = 'Hi'
+    for name in players:
+        message += ' ' + name
+    message += ', \n'
+
+    if mode == 'collaborative':
+        info = 'Your final task score given by AI is: ' + str(ai_task_score[players[0]]) + '. \nCongratulations!'
+    else:
+        info = 'Your final task score given by AI is as below. \n'
+        for name in players:
+            info += name + ': ' + str(ai_task_score[name]) + '\n'
+        info += 'Congratulations!'
+
+    message += info
+
+    return render(request, 'ai_rating.html', {'message': message})
 
 
+@csrf_exempt
 def view_history(request):
     players = request.session.get('players', [])
     return render(request, 'view_history.html', {'players': players})
 
 
+@csrf_exempt
 def new_puzzle(request):
     return redirect('puzzle_settings')
 
 
 @csrf_exempt
-def manual_rating_multi(request):
-    assert NotImplementedError
+def change_mode(request):
+    mode = request.session.get('mode', 'collaborative')
+    if mode == 'collaborative':
+        request.session['mode'] = 'competitive'
+    elif mode == 'competitive':
+        request.session['mode'] = 'collaborative'
+    return redirect('puzzle_settings')
 
-
-@csrf_exempt
-def manual_rating_two(request):
-    assert NotImplementedError

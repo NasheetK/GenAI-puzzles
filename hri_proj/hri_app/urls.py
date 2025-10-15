@@ -16,11 +16,10 @@ urlpatterns = [
     path('save_personal_record_detail/', views.save_personal_record_detail, name='save_personal_record_detail'),
     path('save_personal_record_general/', views.save_personal_record_general, name='save_personal_record_general'),
     path('manual_rating/', views.manual_rating, name='manual_rating'),
-    # path('manual_rating_multi/', views.manual_rating_multi, name='manual_rating_multi'),
-    # path('manual_rating_two/', views.manual_rating_two, name='manual_rating_two'),
     path('submit_ratings/', views.submit_ratings, name='submit_ratings'),
     path('ai_rating/', views.ai_rating, name='ai_rating'),
     path('view_history/', views.view_history, name='view_history'),
     path('new_puzzle/', views.new_puzzle, name='new_puzzle'),
+    path('change_mode/', views.change_mode, name='change_mode'),
 ]
 

@@ -34,120 +34,249 @@
   </style>
 </head>
 <body>
-    <div>Rate Yourselves</div>
+    <div>Rate Yourself</div>
     <table id="rating-table" aria-describedby="table-desc">
         <thead>
             <tr id="header-row"></tr>
         </thead>
         <tbody id="tbody"></tbody>
     </table>
-    <button id="submit-btn">Submit</button>
+    <form id="ai_rating" method="POST" action="{% url 'ai_rating' %}">
+        <button type="submit">View AI Rating</button>
+    </form>
+
+    <form id="view_history" method="POST" action="{% url 'view_history' %}">
+        <button type="submit">View History</button>
+    </form>
+
+    <form id="change_mode" method="POST" action="{% url 'change_mode' %}">
+        <button type="submit">Change Mode</button>
+    </form>
+
+    <form id="new_puzzle" method="POST" action="{% url 'new_puzzle' %}">
+        <button type="submit">Next Puzzle Task</button>
+    </form>
+
+    <form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
+        <button type="submit">Exit</button>
+    </form>
 
   <script>
-    const playerList = [
-      { name: 'Alice' },
-      { name: 'Bob' },
-      { name: 'Charlie' }
-    ];
-    const taskNames = ['任务：专注度','任务：合作性'];
+    const players = {{ players|safe }};
+    const tasks = ['Satisfy with what you did?','How you feel about the tasks?'];
     const emojis = ['😡','😕','😐','🙂','😄'];
-    const emojiAlt = ['非常不高兴','不高兴','中立','稍微高兴','非常高兴'];
+    const emojiAlt = ['very unhappy','unhappy','middle','happy','very happy'];
 
-    const headerRow = document.getElementById('header-row');
+    const header_row = document.getElementById('header-row');
     const tbody = document.getElementById('tbody');
 
     function buildHeader(){
-      headerRow.innerHTML = '';
-      const thName = document.createElement('th');
-      thName.textContent = '姓名';
-      headerRow.appendChild(thName);
-      for(const t of taskNames){
-        const th = document.createElement('th');
-        th.textContent = t;
-        headerRow.appendChild(th);
-      }
+        header_row.innerHTML = '';
+        const thName = document.createElement('th');
+        thName.textContent = 'name';
+        header_row.appendChild(thName);
+        for(const t of tasks){
+            const th = document.createElement('th');
+            th.textContent = t;
+            header_row.appendChild(th);
+        }
     }
 
     function buildRows(){
-      tbody.innerHTML = '';
-      playerList.forEach((p, rowIdx)=>{
-        const tr = document.createElement('tr');
-        const tdName = document.createElement('td');
-        tdName.className = 'name-cell';
-        tdName.textContent = p.name;
-        tr.appendChild(tdName);
+        tbody.innerHTML = '';
+        players.forEach((p, rowIdx)=>{
+            const tr = document.createElement('tr');
+            const tdName = document.createElement('td');
+            tdName.className = 'name-cell';
+            tdName.textContent = p;
+            tr.appendChild(tdName);
 
-        taskNames.forEach((task, taskIdx)=>{
-          const td = document.createElement('td');
-          const groupName = `r_${rowIdx}_${taskIdx}`;
-          const wrapper = document.createElement('div');
-          wrapper.className = 'rating';
-          emojis.forEach((emo, i)=>{
-            const input = document.createElement('input');
-            input.type = 'radio';
-            input.name = groupName;
-            input.id = `${groupName}_v${i}`;
-            input.value = String(i+1);
+            tasks.forEach((task, taskIdx)=>{
+                const td = document.createElement('td');
+                const groupName = `r_${rowIdx}_${taskIdx}`;
+                const wrapper = document.createElement('div');
+                wrapper.className = 'rating';
+                emojis.forEach((emo, i)=>{
+                    const input = document.createElement('input');
+                    input.type = 'radio';
+                    input.name = groupName;
+                    input.id = `${groupName}_v${i}`;
+                    input.value = String(i+1);
 
-            const label = document.createElement('label');
-            label.htmlFor = input.id;
-            label.className = 'emoji-label';
-            label.setAttribute('aria-label', emojiAlt[i]);
+                    const label = document.createElement('label');
+                    label.htmlFor = input.id;
+                    label.className = 'emoji-label';
+                    label.setAttribute('aria-label', emojiAlt[i]);
 
-            const span = document.createElement('span');
-            span.textContent = emo;
-            label.appendChild(span);
+                    const span = document.createElement('span');
+                    span.textContent = emo;
+                    label.appendChild(span);
 
-            wrapper.appendChild(input);
-            wrapper.appendChild(label);
-          });
-          td.appendChild(wrapper);
-          tr.appendChild(td);
+                    wrapper.appendChild(input);
+                    wrapper.appendChild(label);
+                });
+                td.appendChild(wrapper);
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
         });
-        tbody.appendChild(tr);
-      });
+    }
+
+    function checkNull(name) {
+        const el = document.querySelector(`input[name="${name}"]:checked`);
+        return el ? el.value : null;
     }
 
     function gatherRatings(){
-      const results = [];
-      playerList.forEach((p, rowIdx)=>{
-        const rowRes = { name: p.name, ratings: [] };
-        taskNames.forEach((t, taskIdx)=>{
-          const group = `r_${rowIdx}_${taskIdx}`;
-          const checked = document.querySelector(`input[name="${group}"]:checked`);
-          rowRes.ratings.push(checked ? Number(checked.value) : null);
+        const results = [];
+        players.forEach((p, rowIdx)=>{
+            const rowRes = { name: p, ratings: [] };
+            tasks.forEach((t, taskIdx)=>{
+                const group = `r_${rowIdx}_${taskIdx}`;
+                const checked = document.querySelector(`input[name="${group}"]:checked`);
+                rowRes.ratings.push(checked ? Number(checked.value) : null);
+            });
+            results.push(rowRes);
         });
-        results.push(rowRes);
-      });
-      return results;
+        return results;
     }
 
     function allSelected(){
-      return !gatherRatings().some(r => r.ratings.includes(null));
+        return !gatherRatings().some(r => r.ratings.includes(null));
     }
 
-    function submitRatings(){
-      if(!allSelected()){
-        alert('未完成全部选择');
-        return;
-      }
-      const data = gatherRatings();
-      console.log('提交到后端：', data);
-      // 模拟提交后端：
-      fetch('/submit_ratings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      }).then(res => {
-        if(res.ok) alert('提交成功！');
-        else alert('提交失败');
-      }).catch(err => alert('网络错误'));
-    }
+    document.getElementById('ai_rating').addEventListener('submit', function(e) {
+        e.preventDefault(); // stop normal form submission
 
-    document.getElementById('submit-btn').addEventListener('click', submitRatings);
+        if (!allSelected()) {
+            alert('Please finish the rating!');
+            return;
+        }
+
+        const data = gatherRatings();
+
+        fetch("{% url 'submit_ratings' %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(res => {
+            if (!res.ok) {
+                alert('Error occurs while submitting ratings!');
+                return;
+            }
+            // Ratings submitted successfully, now navigate to ai_rating
+            window.location.href = "{% url 'ai_rating' %}";
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error occurs while submitting ratings!');
+        });
+    });
+
+    document.getElementById('view_history').addEventListener('submit', function(e) {
+        e.preventDefault(); // stop normal form submission
+
+        if (!allSelected()) {
+            alert('Please finish the rating!');
+            return;
+        }
+
+        const data = gatherRatings();
+
+        fetch("{% url 'submit_ratings' %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(res => {
+            if (!res.ok) {
+                alert('Error occurs while submitting ratings!');
+                return;
+            }
+            window.location.href = "{% url 'view_history' %}";
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error occurs while submitting ratings!');
+        });
+    });
+
+    document.getElementById('change_mode').addEventListener('submit', function(e) {
+        e.preventDefault(); // stop normal form submission
+
+        if (!allSelected()) {
+            alert('Please finish the rating!');
+            return;
+        }
+
+        const data = gatherRatings();
+
+        fetch("{% url 'submit_ratings' %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(res => {
+            if (!res.ok) {
+                alert('Error occurs while submitting ratings!');
+                return;
+            }
+            const current_mode = '{{ mode|escapejs }}';
+            let new_mode;
+            if (current_mode === 'collaborative') {
+                new_mode = 'competitive';
+            } else if (current_mode === 'competitive') {
+                new_mode = 'collaborative';
+            } else {
+                alert('Unknown mode: ' + current_mode);
+                return;
+            }
+            const message = "Confirm to change the mode to " + new_mode + "?";
+            if (confirm(message)) {
+                window.location.href = "{% url 'change_mode' %}";
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error occurs while submitting ratings!');
+        });
+    });
+
+    document.getElementById('new_puzzle').addEventListener('submit', function(e) {
+        e.preventDefault(); // stop normal form submission
+
+        if (!allSelected()) {
+            alert('Please finish the rating!');
+            return;
+        }
+
+        const data = gatherRatings();
+
+        fetch("{% url 'submit_ratings' %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(res => {
+            if (!res.ok) {
+                alert('Error occurs while submitting ratings!');
+                return;
+            }
+            const message = "Ready to start a new puzzle task?";
+            if (confirm(message)) {
+                window.location.href = "{% url 'new_puzzle' %}";
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error occurs while submitting ratings!');
+        });
+    });
 
     buildHeader();
     buildRows();
+
   </script>
 </body>
 </html>
