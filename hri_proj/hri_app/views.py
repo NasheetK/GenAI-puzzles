@@ -13,13 +13,15 @@ import json
 
 
 def home(request):
-    request.session.clear()
+    for key in list(request.session.keys()):
+        del request.session[key]
     return render(request, 'home_page.html')
 
 
 @csrf_exempt  # Disable CSRF for API endpoints (for simplicity)
 def clear_and_exit(request):
-    request.session.clear()
+    for key in list(request.session.keys()):
+        del request.session[key]
     return render(request, 'home_page.html')
 
 

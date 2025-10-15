@@ -98,6 +98,9 @@
     <form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
         <button type="submit">Exit</button>
     </form>
+    <form id="view_history" method="POST" action="{% url 'view_history' %}">
+        <button type="submit">View History</button>
+    </form>
 
     <script>
 
