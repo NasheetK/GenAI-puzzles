@@ -1,13 +1,104 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>View History</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+        }
+        select {
+            padding: 6px;
+            font-size: 14px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-History Records
+    <h2>Player History</h2>
 
-<button type="button" onclick="window.history.back();">Back</button>
+    <!-- Dropdown for selecting player -->
+    <label for="player_select">Select Player:</label>
+    <select id="player_select">
+        <option value="">-- Choose a player --</option>
+        {% for player in players %}
+            <option value="{{ player }}">{{ player }}</option>
+        {% endfor %}
+    </select>
 
+    <!-- History table -->
+    <table id="record_table" class="hidden">
+        <thead>
+            <tr>
+                <th>Record ID</th>
+                <th>Team Member</th>
+                <th>Game Mode</th>
+                <th>Difficulty</th>
+                <th>Puzzle Amount</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Self Feeling Score</th>
+                <th>Self Task Score</th>
+                <th>AI Task Score</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <button type="button" onclick="window.history.back();">Back</button>
+
+    <script>
+        // Convert Django data into JS
+        const player_records = JSON.parse('{{ player_records|escapejs }}');
+        const player_select = document.getElementById('player_select');
+        const record_table = document.getElementById('record_table');
+        const tbody = record_table.querySelector('tbody');
+
+        player_select.addEventListener('change', function() {
+            const selected_player = this.value;
+            tbody.innerHTML = ''; // clear previous rows
+
+            const records = player_records[selected_player];
+            if (!records) {
+                record_table.classList.add('hidden');
+                return;
+            }
+
+            for (const r of records) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${r.record_id}</td>
+                    <td>${r.team_member}</td>
+                    <td>${r.game_mode}</td>
+                    <td>${r.difficulty}</td>
+                    <td>${r.puzzle_amount}</td>
+                    <td>${r.time_start}</td>
+                    <td>${r.time_end}</td>
+                    <td>${r.self_feeling_score}</td>
+                    <td>${r.self_task_score}</td>
+                    <td>${r.ai_task_score}</td>
+                `;
+                tbody.appendChild(row);
+            }
+            record_table.classList.remove('hidden');
+        });
+    </script>
 </body>
 </html>

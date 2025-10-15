@@ -54,7 +54,7 @@ class PersonalRecordGeneral(models.Model):
     bg_color = models.CharField(max_length=20)
     puzzle_amount = models.IntegerField()
     time_start = models.DateTimeField(auto_now_add=False)
-    time_end = models.DateTimeField(auto_now_add=True)
+    time_end = models.DateTimeField(auto_now_add=False)
     self_feeling_score = models.IntegerField(default=0)
     self_task_score = models.IntegerField(default=0)
     ai_task_score = models.IntegerField(default=0)

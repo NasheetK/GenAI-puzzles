@@ -13,6 +13,7 @@ import json
 
 
 def home(request):
+    request.session.clear()
     return render(request, 'home_page.html')
 
 
@@ -287,12 +288,13 @@ def get_manual_ratings_by_name(data, name):
 @csrf_exempt
 def submit_ratings(request):
     if request.method == "POST":
-
         ai_score = request.session.get('ai_task_score', {})
+        print(ai_score)
         if ai_score: # already predicted in previous button clicks
             return JsonResponse({'status': 'ok'})
         request.session['ai_task_score'] = {}
         players = request.session.get('players', [])
+        print(players)
         data = json.loads(request.body)
         print(data)
         mode = request.session.get('mode', 'collaborative')
@@ -331,6 +333,7 @@ def submit_ratings(request):
                 self_task_score=self_task_score,
                 ai_task_score=ai_task_score
             )
+            print('submit general record')
             request.session['ai_task_score'][name] = ai_task_score
         return JsonResponse({'status': 'ok'})
     return JsonResponse({'status': 'error', 'message': 'invalid method'})
@@ -362,7 +365,33 @@ def ai_rating(request):
 @csrf_exempt
 def view_history(request):
     players = request.session.get('players', [])
-    return render(request, 'view_history.html', {'players': players})
+    player_records = {}
+    for name in players:
+        records = PersonalRecordGeneral.objects.filter(
+            name=name
+        ).order_by('time_start')
+        records_refined = []
+        for r in records:
+            records_refined.append({
+                'record_id': r.record_id,
+                'name': r.name,
+                'team_member': r.team_member,
+                'game_mode': r.game_mode,
+                'difficulty': r.difficulty,
+                'puzzle_amount': r.puzzle_amount,
+                'time_start': r.time_start.strftime("%Y-%m-%d %H:%M:%S"),
+                'time_end': r.time_end.strftime("%Y-%m-%d %H:%M:%S"),
+                'self_feeling_score': r.self_feeling_score,
+                'self_task_score': r.self_task_score,
+                'ai_task_score': r.ai_task_score,
+            })
+        player_records[name] = records_refined
+
+    context = {
+        'players': players,
+        'player_records': json.dumps(player_records)}
+    print(context)
+    return render(request, 'view_history.html', context)
 
 
 @csrf_exempt
