@@ -6,6 +6,9 @@ from django.views.decorators.csrf import csrf_exempt
 from .core_functions.puzzle_generation import *
 from .core_functions.ai_rating import *
 from .models import *
+
+from datetime import datetime
+import json
 # Create your views here.
 
 
@@ -175,14 +178,14 @@ def solve_collab(request):
         if success:
             full_info_list = request.session.get('full_info_list', [])
             players = request.session.get('players', [])
-            players = ['test_name_1', 'test_name_2']
+            # players = ['test_name_1', 'test_name_2']
             index = int(request.POST.get("index"))
             action = 'piece_matched'
             # print(full_info_list)
             puzzle_id = full_info_list[index][1]  # get puzzle_id
 
             for name in players:
-                PersonalRecordDetails.objects.create(
+                PersonalRecordDetail.objects.create(
                     name=name,
                     puzzle_id=puzzle_id,
                     action=action,
@@ -204,19 +207,17 @@ def solve_collab(request):
 
 
 @csrf_exempt
-def save_personal_record_details(request):
+def save_personal_record_detail(request):
     if request.method == "POST":
         full_info_list = request.session.get('full_info_list', [])
         players = request.session.get('players', [])
-        players = ['test_name_1', 'test_name_2']
+        # players = ['test_name_1', 'test_name_2']
         index = int(request.POST.get("index"))
         action = request.POST.get("action")
         puzzle_id = full_info_list[index][1] # get puzzle_id
 
-        print(111111)
-
         for name in players:
-            PersonalRecordDetails.objects.create(
+            PersonalRecordDetail.objects.create(
                 name=name,
                 puzzle_id=puzzle_id,
                 action=action,
@@ -230,6 +231,7 @@ def save_personal_record_details(request):
 def save_personal_record_general(request):
     assert NotImplementedError
 
+
 @csrf_exempt
 def solve_compete(request):
     assert NotImplementedError
@@ -237,8 +239,123 @@ def solve_compete(request):
 
 def manual_rating(request):
     players = request.session.get('players', [])
+    # print(players)
     if len(players) > 2:
-        return render(request, "manual_rating_multi_players.html")
+        return render(request, "manual_rating_multi_players.html", {'players': players})
     else:
-        return render(request, "manual_rating_two_players.html")
+        return render(request, "manual_rating_two_players.html", {'players': players})
 
+
+def get_records_from_db(name, puzzle_id_list):
+    records_all = []
+    time_start = 0
+    time_end = 0
+    for puzzle_id in puzzle_id_list:
+        records_refined = []
+        records_raw = PersonalRecordDetail.objects.filter(
+            name=name,
+            puzzle_id=puzzle_id
+        ).order_by('timestamp')
+        for r in records_raw:
+            cur_time = int(r.timestamp.timestamp() * 1000)
+            if time_start == 0:
+                time_start = cur_time
+                time_end = cur_time
+            elif time_end < cur_time:
+                time_end = cur_time
+            records_refined.append({
+                'detail_id': r.detail_id,
+                'name': r.name,
+                'puzzle_id': r.puzzle_id,
+                'action': r.action,
+                'timestamp': cur_time  # 13-digit timestamp
+            })
+        records_all.append(records_refined)
+        time_start = datetime.fromtimestamp(time_start / 1000).strftime("%Y-%m-%d %H:%M:%S")
+        time_end = datetime.fromtimestamp(time_end / 1000).strftime("%Y-%m-%d %H:%M:%S")
+    return records_all, time_start, time_end
+
+
+def get_manual_ratings_by_name(data, name):
+    for record in data:
+        if record['name'] == name:
+            return record['ratings']
+    return [0, 0]
+
+
+@csrf_exempt
+def submit_ratings(request):
+    if request.method == "POST":
+
+        ai_score = request.session.get('ai_task_score', {})
+        if ai_score: # already predicted in previous button clicks
+            return JsonResponse({'status': 'ok'})
+        request.session['ai_task_score'] = {}
+        players = request.session.get('players', [])
+        data = json.loads(request.body)
+        print(data)
+        mode = request.session.get('mode', 'collaborative')
+        ai_task_score = 0
+        time_start, time_end = 0, 0
+        if mode == 'collaborative':
+            full_info_list = request.session.get('full_info_list', [])
+            puzzle_id_list = [x[1] for x in full_info_list]
+            related_records, time_start, time_end = get_records_from_db(players[0], puzzle_id_list)
+            ai_task_score = get_ai_score(len(players), len(puzzle_id_list), related_records)
+        for name in players:
+            self_feeling_score, self_task_score = get_manual_ratings_by_name(data, name)
+            team_member = ','.join(players)
+            difficulty = request.session.get('difficulty', 'Beginner')
+            character = request.session.get('character', 'Rabbit')
+            activity = request.session.get('activity', 'School')
+            bg_color = request.session.get('bg_color', 'Red')
+            full_info_list = request.session.get('full_info_list', [])
+            puzzle_id_list = [x[1] for x in full_info_list]
+            if mode == 'competitive':
+                related_records, time_start, time_end = get_records_from_db(name, puzzle_id_list)
+                ai_task_score = get_ai_score(1, len(puzzle_id_list), related_records)
+
+            PersonalRecordGeneral.objects.create(
+                name=name,
+                team_member=team_member,
+                game_mode=mode,
+                difficulty=difficulty,
+                character=character,
+                activity=activity,
+                bg_color=bg_color,
+                puzzle_amount=len(puzzle_id_list),
+                time_start=time_start,
+                time_end=time_end,
+                self_feeling_score=self_feeling_score,
+                self_task_score=self_task_score,
+                ai_task_score=ai_task_score
+            )
+            request.session['ai_task_score'][name] = ai_task_score
+        return JsonResponse({'status': 'ok'})
+    return JsonResponse({'status': 'error', 'message': 'invalid method'})
+
+
+def ai_rating(request):
+    ai_task_score = request.session.get('ai_task_score', {})
+    players = request.session.get('players', [])
+    mode = request.session.get('mode', [])
+    return render(request, 'ai_rating.html', {'players': players, 'mode': mode, 'ai_task_score': ai_task_score})
+
+
+def view_history(request):
+    players = request.session.get('players', [])
+    return render(request, 'view_history.html', {'players': players})
+
+
+def new_puzzle(request):
+    return redirect('puzzle_settings')
+
+
+@csrf_exempt
+def manual_rating_multi(request):
+    assert NotImplementedError
+
+
+@csrf_exempt
+def manual_rating_two(request):
+    assert NotImplementedError

@@ -1,10 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Player Rating Table</title>
+  <style>
+    :root{--size:28px}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;margin:20px}
+    table{border-collapse:collapse;width:100%;max-width:900px;margin:0 auto}
+    th,td{border:1px solid #ddd;padding:8px;text-align:center;vertical-align:middle}
+    th{background:#f7f7f7}
+    .name-cell{text-align:left;padding-left:12px;font-weight:600}
+    .rating{display:flex;gap:6px;justify-content:center;align-items:center}
+    .rating input{display:none}
+    .emoji-label{
+      display:inline-grid;
+      place-items:center;
+      width:var(--size);height:var(--size);
+      font-size:18px;line-height:1;
+      border-radius:6px;cursor:pointer;user-select:none;
+      transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
+    }
+    .emoji-label:hover{transform:translateY(-3px)}
+    input:checked + .emoji-label{background:#ffd966;box-shadow:0 0 6px rgba(0,0,0,.3);transform:translateY(-6px) scale(1.06)}
+    .emoji-label span{font-size:20px}
+    caption{caption-side:top;text-align:left;font-weight:700;margin-bottom:8px}
+    @media (max-width:520px){:root{--size:24px}.emoji-label span{font-size:18px}}
+    button{
+      margin:20px auto;display:block;padding:10px 20px;font-size:16px;
+      border:none;border-radius:8px;background:#007bff;color:#fff;cursor:pointer;
+    }
+    button:hover{background:#0056b3}
+  </style>
 </head>
 <body>
-form team two players
+    <div>Rate Yourselves</div>
+    <table id="rating-table" aria-describedby="table-desc">
+        <thead>
+            <tr id="header-row"></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+    <button id="submit-btn">Submit</button>
+
+  <script>
+    const playerList = [
+      { name: 'Alice' },
+      { name: 'Bob' },
+      { name: 'Charlie' }
+    ];
+    const taskNames = ['任务：专注度','任务：合作性'];
+    const emojis = ['😡','😕','😐','🙂','😄'];
+    const emojiAlt = ['非常不高兴','不高兴','中立','稍微高兴','非常高兴'];
+
+    const headerRow = document.getElementById('header-row');
+    const tbody = document.getElementById('tbody');
+
+    function buildHeader(){
+      headerRow.innerHTML = '';
+      const thName = document.createElement('th');
+      thName.textContent = '姓名';
+      headerRow.appendChild(thName);
+      for(const t of taskNames){
+        const th = document.createElement('th');
+        th.textContent = t;
+        headerRow.appendChild(th);
+      }
+    }
+
+    function buildRows(){
+      tbody.innerHTML = '';
+      playerList.forEach((p, rowIdx)=>{
+        const tr = document.createElement('tr');
+        const tdName = document.createElement('td');
+        tdName.className = 'name-cell';
+        tdName.textContent = p.name;
+        tr.appendChild(tdName);
+
+        taskNames.forEach((task, taskIdx)=>{
+          const td = document.createElement('td');
+          const groupName = `r_${rowIdx}_${taskIdx}`;
+          const wrapper = document.createElement('div');
+          wrapper.className = 'rating';
+          emojis.forEach((emo, i)=>{
+            const input = document.createElement('input');
+            input.type = 'radio';
+            input.name = groupName;
+            input.id = `${groupName}_v${i}`;
+            input.value = String(i+1);
+
+            const label = document.createElement('label');
+            label.htmlFor = input.id;
+            label.className = 'emoji-label';
+            label.setAttribute('aria-label', emojiAlt[i]);
+
+            const span = document.createElement('span');
+            span.textContent = emo;
+            label.appendChild(span);
+
+            wrapper.appendChild(input);
+            wrapper.appendChild(label);
+          });
+          td.appendChild(wrapper);
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    function gatherRatings(){
+      const results = [];
+      playerList.forEach((p, rowIdx)=>{
+        const rowRes = { name: p.name, ratings: [] };
+        taskNames.forEach((t, taskIdx)=>{
+          const group = `r_${rowIdx}_${taskIdx}`;
+          const checked = document.querySelector(`input[name="${group}"]:checked`);
+          rowRes.ratings.push(checked ? Number(checked.value) : null);
+        });
+        results.push(rowRes);
+      });
+      return results;
+    }
+
+    function allSelected(){
+      return !gatherRatings().some(r => r.ratings.includes(null));
+    }
+
+    function submitRatings(){
+      if(!allSelected()){
+        alert('未完成全部选择');
+        return;
+      }
+      const data = gatherRatings();
+      console.log('提交到后端：', data);
+      // 模拟提交后端：
+      fetch('/submit_ratings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }).then(res => {
+        if(res.ok) alert('提交成功！');
+        else alert('提交失败');
+      }).catch(err => alert('网络错误'));
+    }
+
+    document.getElementById('submit-btn').addEventListener('click', submitRatings);
+
+    buildHeader();
+    buildRows();
+  </script>
 </body>
 </html>

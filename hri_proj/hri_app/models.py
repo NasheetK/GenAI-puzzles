@@ -55,8 +55,9 @@ class PersonalRecordGeneral(models.Model):
     puzzle_amount = models.IntegerField()
     time_start = models.DateTimeField(auto_now_add=False)
     time_end = models.DateTimeField(auto_now_add=True)
-    self_rate_score = models.IntegerField(default=0)
-    ai_rate_score = models.IntegerField(default=0)
+    self_feeling_score = models.IntegerField(default=0)
+    self_task_score = models.IntegerField(default=0)
+    ai_task_score = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.name} - {self.time_start} to {self.time_end} - {self.puzzle_amount} puzzles"

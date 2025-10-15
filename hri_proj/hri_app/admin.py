@@ -30,6 +30,6 @@ admin.site.register(PersonalRecordGeneral)
 class PersonalRecordGeneral(admin.ModelAdmin):
     list_display = ('record_id', 'name', 'team_member', 'game_mode',
                     'difficulty', 'character', 'activity', 'bg_color',
-                    'puzzle_id', 'time_start', 'time_end', 'solving_process',
-                    'self_rate_score', 'ai_rate_score')
+                    'puzzle_amount', 'time_start', 'time_end',
+                    'self_feeling_score', 'self_task_score', 'ai_task_score')
     search_fields = ('name', 'puzzle_id')
