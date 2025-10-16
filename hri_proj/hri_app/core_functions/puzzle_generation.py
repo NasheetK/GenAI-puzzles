@@ -25,8 +25,10 @@ def create_puzzle(puzzle_config):
     full_img_list = []
     full_id_list = []
     piece_detail_list = []
+    print(img_amount)
     for i in range(img_amount):
         img_path = create_single_img(puzzle_config)
+        print(img_path)
         img_id = uuid.uuid4().int
         piece_detail = split_to_pieces(img_path, img_id)
         piece_detail_with_id = [(i, x.replace('hri_app/static/', '')) for i, x in enumerate(piece_detail)]
@@ -39,7 +41,7 @@ def create_puzzle(puzzle_config):
 
 def split_to_pieces(img_path, img_id, row=4, col=4, target_size=(256, 256)):
     im = Image.open(img_path)
-    out_dir = 'hri_app/static/imgs/' + str(img_id)
+    out_dir = 'hri_app/static/puzzles/' + str(img_id)
     os.makedirs(out_dir, exist_ok=True)
 
     im = im.resize(target_size)

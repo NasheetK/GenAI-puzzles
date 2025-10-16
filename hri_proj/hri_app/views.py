@@ -201,11 +201,13 @@ def solve_collab(request):
             "correct_y": float(target_y),
         })
 
-    full_img_list, full_id_list, piece_detail_list = create_puzzle(puzzle_config)
-    full_info_list = list(zip(full_img_list, full_id_list, piece_detail_list))
-    request.session['full_info_list'] = full_info_list
-    puzzle_config['full_info_list'] = full_info_list
-    # print(full_info_list)
+    else:
+        full_img_list, full_id_list, piece_detail_list = create_puzzle(puzzle_config)
+        full_info_list = list(zip(full_img_list, full_id_list, piece_detail_list))
+        request.session['full_info_list'] = full_info_list
+        puzzle_config['full_info_list'] = full_info_list
+        # print(full_info_list)
+
     return render(request, "solve_puzzle_collaborative.html", {'puzzle_config': puzzle_config})
 
 
