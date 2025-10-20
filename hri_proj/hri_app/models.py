@@ -50,7 +50,6 @@ class PersonalRecordGeneral(models.Model):
     game_mode = models.CharField(max_length=20)
     difficulty = models.CharField(max_length=20)
     character = models.CharField(max_length=20)
-    activity = models.CharField(max_length=20)
     bg_color = models.CharField(max_length=20)
     puzzle_amount = models.IntegerField()
     time_start = models.DateTimeField(auto_now_add=False)

@@ -67,14 +67,12 @@ def puzzle_settings(request):
 
         difficulty = request.POST.get('difficulty')
         character = request.POST.get('character')
-        activity = request.POST.get('activity')
         bg_color = request.POST.get('bg_color')
 
         # print(players)
         puzzle_config = {
             'difficulty': difficulty,
             'character': character,
-            'activity': activity,
             'bg_color': bg_color,
             'players': players,
             'mode': mode
@@ -138,13 +136,11 @@ def solve_collab(request):
     mode = request.session.get('mode', 'collaborative')
     difficulty = request.POST.get('difficulty')
     character = request.POST.get('character')
-    activity = request.POST.get('activity')
     bg_color = request.POST.get('bg_color')
 
     puzzle_config = {
         'difficulty': difficulty,
         'character': character,
-        'activity': activity,
         'bg_color': bg_color,
         'players': players,
         'mode': mode
@@ -314,7 +310,6 @@ def submit_ratings(request):
             team_member = ','.join(players)
             difficulty = request.session.get('difficulty', 'Beginner')
             character = request.session.get('character', 'Rabbit')
-            activity = request.session.get('activity', 'School')
             bg_color = request.session.get('bg_color', 'Red')
             full_info_list = request.session.get('full_info_list', [])
             puzzle_id_list = [x[1] for x in full_info_list]
@@ -328,7 +323,6 @@ def submit_ratings(request):
                 game_mode=mode,
                 difficulty=difficulty,
                 character=character,
-                activity=activity,
                 bg_color=bg_color,
                 puzzle_amount=len(puzzle_id_list),
                 time_start=time_start,
