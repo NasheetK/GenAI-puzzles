@@ -31,6 +31,16 @@
 </form>
 
 <script>
+
+    window.addEventListener("DOMContentLoaded", () => {
+        const message = "Please enter the names of players.";
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.lang = "en-US";
+        utterance.rate = 0.8;
+        utterance.pitch = 1;
+        speechSynthesis.speak(utterance);
+    });
+
     const container = document.getElementById("player_container");
     const add_btn = document.getElementById("add_btn");
 

@@ -17,4 +17,19 @@
 </form>
 
 </body>
+
+<script>
+    // speak the message aloud after page loading
+    window.addEventListener("DOMContentLoaded", () => {
+        const message = "{{ message|escapejs }}";
+        if (message) {
+            const utterance = new SpeechSynthesisUtterance(message);
+            utterance.lang = "en-US";
+            utterance.rate = 0.8; // speed (1 = normal)
+            utterance.pitch = 1; // tone of voice (1 = normal)
+            speechSynthesis.speak(utterance);
+        }
+    });
+</script>
+
 </html>

@@ -9,6 +9,15 @@ from .models import *
 
 from datetime import datetime
 import json
+import pyttsx3
+
+# init text-to-speech engine
+engine = pyttsx3.init()
+rate = engine.getProperty('rate')
+engine.setProperty('rate', rate - 50)
+engine.setProperty('volume', 1)
+voices = engine.getProperty('voices')
+engine.setProperty('voice', voices[0].id)
 # Create your views here.
 
 
@@ -278,9 +287,9 @@ def get_records_from_db(name, puzzle_id_list):
                 'timestamp': cur_time  # 13-digit timestamp
             })
         records_all.append(records_refined)
-        time_start = datetime.fromtimestamp(time_start / 1000).strftime("%Y-%m-%d %H:%M:%S")
-        time_end = datetime.fromtimestamp(time_end / 1000).strftime("%Y-%m-%d %H:%M:%S")
-    return records_all, time_start, time_end
+        time_start_str = datetime.fromtimestamp(time_start / 1000).strftime("%Y-%m-%d %H:%M:%S")
+        time_end_str = datetime.fromtimestamp(time_end / 1000).strftime("%Y-%m-%d %H:%M:%S")
+    return records_all, time_start_str, time_end_str
 
 
 def get_manual_ratings_by_name(data, name):
