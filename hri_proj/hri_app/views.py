@@ -43,6 +43,10 @@ def form_team_collaborative_two(request):
     return render(request, 'form_team_collaborative.html', {'count': 2, 'add_flag': False})
 
 
+def form_team_collaborative_single(request):
+    return render(request, 'form_team_collaborative.html', {'count': 1, 'add_flag': False})
+
+
 @csrf_exempt
 def form_team_collaborative_multi(request):
     if request.method == "POST":
@@ -202,7 +206,8 @@ def solve_collab(request):
         full_info_list = list(zip(full_img_list, full_id_list, piece_detail_list))
         request.session['full_info_list'] = full_info_list
         puzzle_config['full_info_list'] = full_info_list
-        # print(full_info_list)
+        print(full_info_list)
+        print(len(full_info_list))
 
     return render(request, "solve_puzzle_collaborative.html", {'puzzle_config': puzzle_config})
 
@@ -242,10 +247,10 @@ def manual_rating(request):
     players = request.session.get('players', [])
     mode = request.session.get('mode', 'collaborative')
     # print(players)
-    if len(players) > 2:
-        return render(request, "manual_rating_multi_players.html", {'players': players, 'mode': mode})
-    else:
+    if len(players) == 2:
         return render(request, "manual_rating_two_players.html", {'players': players, 'mode': mode})
+    else:
+        return render(request, "manual_rating_multi_players.html", {'players': players, 'mode': mode})
 
 
 def get_records_from_db(name, puzzle_id_list):

@@ -17,11 +17,11 @@ def create_puzzle(puzzle_config):
         'Expert': 5
     }
     difficulty_value = difficulty_map.get(puzzle_config['difficulty'], 1) # at least one puzzle
-    if mode == 'competitive':
-        img_amount = int(np.floor(difficulty_value))
-    else:
-        img_amount = max(int(np.floor(len(players) * difficulty_value / 2)), 1) # at least one puzzle
-    # img_amount = 2
+    # if mode == 'competitive':
+    #     img_amount = int(np.floor(difficulty_value))
+    # else:
+    #     img_amount = max(int(np.floor(len(players) * difficulty_value / 2)), 1) # at least one puzzle
+    img_amount = 10
     full_img_list = []
     full_id_list = []
     piece_detail_list = []

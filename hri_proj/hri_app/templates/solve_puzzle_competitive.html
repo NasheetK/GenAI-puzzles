@@ -4,13 +4,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Puzzle Game</title>
     <style>
-        html, body { /* not allowed to scroll*/
+        html, body {
             margin: 0;
             padding: 0;
             overflow: hidden;
         }
+
         .tab { display: flex; gap: 8px; margin-bottom: 10px; }
         .tab button {
             padding: 6px 12px;
@@ -24,32 +25,6 @@
 
         .tabcontent { display: none; }
 
-        .full_image {
-            opacity: 0.3;
-            width: 400px;
-            height: 400px;
-            margin-bottom: 15px;
-            border-radius: 10px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.3);
-        }
-        .pieces {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 5px;
-            width: 400px;
-            margin: 0 auto;
-        }
-        .pieces img {
-            width: 100%;
-            border-radius: 5px;
-            box-shadow: 0 0 3px rgba(0,0,0,0.2);
-            cursor: grab;
-        }
-        .pieces img.locked {
-            opacity: 0.7;
-            cursor: default;
-            box-shadow: 0 0 3px rgba(0,255,0,0.5);
-        }
         .timer {
             font-size:48px;
             padding:20px 30px;
@@ -58,12 +33,83 @@
             box-shadow:0 6px 18px rgba(0,0,0,0.08);
         }
 
-    </style>
+        /* === Puzzle Layout === */
+        .puzzle-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            margin-top: 20px;
+        }
 
+        .puzzle-row {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .puzzle-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .puzzle-col {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .full_image {
+            opacity: 0.3;
+            width: 400px;
+            height: 400px;
+            border-radius: 10px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+
+        .piece {
+            width: 100px;
+            height: 100px;
+            border-radius: 5px;
+            box-shadow: 0 0 3px rgba(0,0,0,0.2);
+            cursor: grab;
+        }
+
+        .piece.locked {
+            opacity: 0.7;
+            cursor: default;
+            box-shadow: 0 0 3px rgba(0,255,0,0.5);
+        }
+
+        .piece-placeholder {
+            display: inline-block;
+            vertical-align: top;
+            width: 100px;
+            height: 100px;
+        }
+
+        .dropzone-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 400px;
+            height: 400px;
+        }
+
+        .puzzle-wrapper {
+            position: relative;
+        }
+
+        [id*="_dropzone"] {
+          position: relative;
+        }
+
+    </style>
 </head>
 <body>
     <div> Solve the Puzzles </div>
-    <div>  Drag images below and drop them following the patterns shown. </div>
+    <div> Drag images below and drop them following the patterns shown. </div>
 
     <div class="timer" id="timer">00:00</div>
 
@@ -77,20 +123,45 @@
 
     {% for img, img_id, pieces in puzzle_config.full_info_list %}
       <div class="tabcontent" id="tab{{ forloop.counter0 }}">
-        <div class="full_image_container">
-            <img src="{% static img %}" class="full_image"
-                 id="tab{{ forloop.counter0 }}_dropzone"
-                 draggable="false" alt="Full puzzle">
-        </div>
+        <div class="puzzle-wrapper">
+            <!-- up 4 pieces -->
+            <div class="puzzle-row top">
+                {% for piece_id, piece in pieces|slice:":4" %}
+                    <img src="{% static piece %}" id="{{ img_id }}_{{ piece_id }}"
+                         class="piece" draggable="true">
+                {% endfor %}
+            </div>
 
-        <div class="pieces">
-            {% for piece_id, piece in pieces %}
-                <div class="piece">
-                    <img src="{% static piece %}"
-                         id="{{ img_id }}_{{ piece_id }}"
-                         draggable="true" alt="Piece {{ piece_id }}">
+            <div class="puzzle-center">
+                <!-- left 4 pieces -->
+                <div class="puzzle-col left">
+                    {% for piece_id, piece in pieces|slice:"4:8" %}
+                        <img src="{% static piece %}" id="{{ img_id }}_{{ piece_id }}"
+                             class="piece" draggable="true">
+                    {% endfor %}
                 </div>
-            {% endfor %}
+
+                <!-- original img -->
+                <div class="dropzone-wrapper" id="tab{{ forloop.counter0 }}_dropzone">
+                    <img src="{% static img %}" class="full_image" draggable="false" alt="Full puzzle">
+                </div>
+
+                <!-- right 4 pieces -->
+                <div class="puzzle-col right">
+                    {% for piece_id, piece in pieces|slice:"8:12" %}
+                        <img src="{% static piece %}" id="{{ img_id }}_{{ piece_id }}"
+                             class="piece" draggable="true">
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- down 4 pieces -->
+            <div class="puzzle-row bottom">
+                {% for piece_id, piece in pieces|slice:"12:" %}
+                    <img src="{% static piece %}" id="{{ img_id }}_{{ piece_id }}"
+                         class="piece" draggable="true">
+                {% endfor %}
+            </div>
         </div>
       </div>
     {% endfor %}
@@ -103,9 +174,8 @@
     </form>
 
     <script>
-
         const full_info_list = {{ puzzle_config.full_info_list|safe }};
-        const puzzle_count = {{ full_info_list|length }};
+        const puzzle_count = full_info_list.length;
         let completed = Array(puzzle_count).fill(false);
         let current_tab = 0;
 
@@ -126,86 +196,96 @@
             buttons[index].classList.add("active");
 
             send_record_to_log("start", index);
-
-            // start puzzle solving process
             puzzle_solving();
         }
 
-        // Check if all pieces in a puzzle are locked
-        async function checkPuzzleComplete(index) {
-            const items = document.querySelectorAll(`#tab${index} .pieces img`);
-            const allLocked = Array.from(items).every(i => i.draggable === false);
-            if (allLocked) {
-                completed[index] = true;
-                alert('Puzzle ' + (index + 1) + ' completed!');
-                send_record_to_log("completed", index);
+        // console.log("full_info_list:", full_info_list);
+        // console.log("puzzle_count:", puzzle_count);
 
-                if (index === puzzle_count) {
+        showTab(0); // show the first tab
+
+        async function checkPuzzleComplete(index) {
+            const items = document.querySelectorAll(`#tab${index} .piece`);
+            // puzzle completed only if all pieces in this tab are locked
+            const allLocked = Array.from(items).every(i => i.classList.contains('locked'));
+
+            if (allLocked && !completed[index]) {
+                completed[index] = true;
+                send_record_to_log("completed", index);
+                alert('Puzzle ' + (index + 1) + ' completed!');
+
+                if (index + 1 < puzzle_count) {
+                    showTab(index + 1); // jump to the next tab
+                } else {
+                    // all tabs finished
                     window.location.href = "{% url 'manual_rating' %}";
                 }
             }
         }
 
-        // send status record to log
+
         async function send_record_to_log(action, index) {
             try {
                 const record_data = new FormData();
                 record_data.append("action", action);
                 record_data.append("index", index);
-                const response = await fetch("{% url 'save_personal_record_detail' %}", {
+                await fetch("{% url 'save_personal_record_detail' %}", {
                     method: "POST",
                     body: record_data,
                 });
-
-                const result = await response.json();
             } catch (err) {
-                console.error("Error sending start record:", err);
+                console.error("Error sending record:", err);
             }
         }
 
         function puzzle_solving() {
-            const items = document.querySelectorAll(`#tab${current_tab} .pieces img`);
-            let offsetX, offsetY;
+            const items = document.querySelectorAll(`#tab${current_tab} .piece`);
+            let offsetX = 0, offsetY = 0;
             let current_item = null;
+            let placeholder = null;
 
             items.forEach(item => {
                 item.addEventListener("mousedown", e => {
                     if (item.classList.contains("locked")) return;
+                    e.preventDefault();
 
                     current_item = item;
-                    current_item.style.cursor = "grabbing";
                     const rect = current_item.getBoundingClientRect();
-                    offsetX = e.clientX - rect.left;
-                    offsetY = e.clientY - rect.top;
+
+                    // create placeholder to occupy the space of completed pieces
+                    placeholder = document.createElement("div");
+                    placeholder.className = "piece-placeholder";
+                    placeholder.style.width = rect.width + "px";
+                    placeholder.style.height = rect.height + "px";
+                    current_item.parentNode.insertBefore(placeholder, current_item);
+
+                    // obtain the settings for current_item, avoid size change during movements
+                    current_item.style.position = "fixed";
+                    current_item.style.left = rect.left + "px";
+                    current_item.style.top = rect.top + "px";
                     current_item.style.width = rect.width + "px";
                     current_item.style.height = rect.height + "px";
-                    current_item.style.position = "absolute";
-                    current_item.style.zIndex = 1000;
-                    // document.body.appendChild(current_item);
+                    current_item.style.zIndex = 9999;
+                    current_item.style.cursor = "grabbing";
+
+                    offsetX = e.clientX - rect.left;
+                    offsetY = e.clientY - rect.top;
                 });
             });
 
             document.addEventListener("mousemove", e => {
                 if (!current_item) return;
-                current_item.style.left = (e.clientX - offsetX) + "px";
-                current_item.style.top = (e.clientY - offsetY) + "px";
+                current_item.style.left = e.clientX - offsetX + "px";
+                current_item.style.top = e.clientY - offsetY + "px";
             });
 
             document.addEventListener("mouseup", async e => {
                 if (!current_item) return;
                 current_item.style.cursor = "grab";
 
-                // const container_pos = current_item.parentElement.getBoundingClientRect();
                 const piece_pos = current_item.getBoundingClientRect();
-                // const refined_x = piece_pos.left - container_pos.left + window.scrollX;
-                // const refined_y = piece_pos.top - container_pos.top + window.scrollY;
-
-                const dropzone = document.getElementById("tab"+current_tab+"_dropzone");
+                const dropzone = document.getElementById("tab" + current_tab + "_dropzone");
                 const dropzone_pos = dropzone.getBoundingClientRect();
-                // const refined_left = dropzone_pos.left - container_pos.left + window.scrollX;
-                // const refined_top = dropzone_pos.top - container_pos.top + window.scrollY;
-                // const refined_right = dropzone_pos.right - container_pos.right + window.scrollX;
-                // const refined_bottom = dropzone_pos.bottom - container_pos.bottom + window.scrollY;
 
                 const drag_pos_data = new FormData();
                 drag_pos_data.append("index", current_tab);
@@ -216,70 +296,87 @@
                 drag_pos_data.append("target_top", dropzone_pos.top);
                 drag_pos_data.append("target_right", dropzone_pos.right);
                 drag_pos_data.append("target_bottom", dropzone_pos.bottom);
-                // drag_pos_data.append("x", refined_x);
-                // drag_pos_data.append("y", refined_y);
-                // drag_pos_data.append("target_left", refined_left);
-                // drag_pos_data.append("target_top", refined_top);
-                // drag_pos_data.append("target_right", refined_right);
-                // drag_pos_data.append("target_bottom", refined_bottom);
 
                 try {
                     const response = await fetch("{% url 'solve_collab' %}", {
                         method: "POST",
-                        body: drag_pos_data
+                        body: drag_pos_data,
                     });
                     const data = await response.json();
 
                     if (data.success) {
-                        current_item.style.left = data.correct_x + "px";
-                        current_item.style.top = data.correct_y + "px";
-                        current_item.draggable = false;
+                        // calculate the drift of the piece with respect to the dropzone
+                        const dx = data.correct_x - dropzone_pos.left;
+                        const dy = data.correct_y - dropzone_pos.top;
+
+                        // remove corresponding placeholder
+                        if (placeholder && placeholder.parentNode) {
+                            placeholder.parentNode.removeChild(placeholder);
+                        }
+
+                        // put into dropzone
+                        current_item.style.position = "absolute";
+                        current_item.style.left = dx + "px";
+                        current_item.style.top = dy + "px";
+                        current_item.style.zIndex = 2;
                         current_item.classList.add("locked");
+                        dropzone.appendChild(current_item);
 
                         checkPuzzleComplete(current_tab);
+                    } else {
+                        // replace to original location if not a correct piece
+                        if (placeholder && placeholder.parentNode) {
+                            placeholder.parentNode.replaceChild(current_item, placeholder);
+                        }
+                        current_item.style.position = "";
+                        current_item.style.left = "";
+                        current_item.style.top = "";
+                        current_item.style.width = "";
+                        current_item.style.height = "";
+                        current_item.style.zIndex = "";
                     }
-                } catch (err) {
-                    console.error("Error verifying piece position:", err);
+                } catch (error) {
+                    console.error("Error in piece position verification!", error);
+                    if (placeholder && placeholder.parentNode) {
+                        placeholder.parentNode.replaceChild(current_item, placeholder);
+                    }
+                    current_item.style.position = "";
+                    current_item.style.left = "";
+                    current_item.style.top = "";
+                    current_item.style.width = "";
+                    current_item.style.height = "";
+                    current_item.style.zIndex = "";
                 }
 
                 current_item = null;
+                placeholder = null;
             });
         }
 
-        // add timer for full puzzle solving process
         const start_minutes = 1;
         const next_url = "{% url 'manual_rating' %}";
-
         let remaining_seconds = start_minutes * 60;
         const timer_full_puzzle = document.getElementById('timer');
-        let timer_interval = null; // update the timer by one second
 
         function formatTime(totalSeconds) {
             const m = Math.floor(totalSeconds / 60);
             const s = totalSeconds % 60;
-            const mm = String(m).padStart(2, '0');
-            const ss = String(s).padStart(2, '0');
-            return `${mm}:${ss}`;
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         }
 
         function tick() {
             timer_full_puzzle.textContent = formatTime(remaining_seconds);
-
             if (remaining_seconds <= 0) {
                 clearInterval(timer_interval);
                 alert('Timeout!');
                 send_record_to_log("terminated", current_tab);
                 window.location.href = next_url;
-                return;
             }
-
             remaining_seconds -= 1;
         }
 
-        // clear the timer
         tick();
-        timer_interval = setInterval(tick, 1000);
-
+        const timer_interval = setInterval(tick, 1000);
     </script>
 </body>
 </html>
