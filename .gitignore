@@ -4,6 +4,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+__pycache__/
+*.py[cod]
+*$py.class
+
 venv/
 .venv/
 env/
@@ -17,3 +21,4 @@ venv.bak/
 *.sqlite3
 .DS_Store
 Thumbs.db
+
