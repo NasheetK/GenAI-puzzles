@@ -1,5 +1,8 @@
 venv/
 hri_proj/hri_app/static/puzzles/
+__pycache__/
+*.py[cod]
+*$py.class
 
 __pycache__/
 *.py[cod]
