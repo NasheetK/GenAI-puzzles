@@ -1,3 +1,19 @@
 venv/
 hri_proj/hri_app/static/puzzles/
+__pycache__/
+*.py[cod]
+*$py.class
 
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+.vscode/
+.env
+.env.*
+*.sqlite3
+.DS_Store
+Thumbs.db
