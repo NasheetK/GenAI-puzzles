@@ -1,35 +1,51 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+  <meta charset="UTF-8" />
+  <title>Start Puzzle</title>
+
+  <!-- Shared Montessori styles -->
+  <link rel="stylesheet" href="{% static 'css/playful_montessori.css' %}">
+  <link rel="stylesheet" href="{% static 'css/home_menu_montessori.css' %}">
+
+  <!-- Fonts (optional if already in your CSS) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
-<body>
 
-{{ message }}
+<body class="montessori-bg">
+   <main class="center-screen">
+  <div class="montessori-card stack-buttons">
+    {% if message %}
+      <p class="montessori-heading" style="text-align:center;">{{ message }}</p>
+    {% endif %}
 
-<form method="POST">
-    <button type="submit">Start Puzzle</button>
-</form>
+    <form method="POST">
+      {% csrf_token %}
+      <button type="submit" class="montessori-btn montessori-btn-green">Start Puzzle</button>
+    </form>
 
-<form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
-    <button type="submit">Exit</button>
-</form>
+    <form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
+      <button type="submit" class="montessori-btn montessori-btn-red">Exit</button>
+    </form>
+  </div>
+</main>
 
-</body>
-
-<script>
-    // speak the message aloud after page loading
+  <script>
     window.addEventListener("DOMContentLoaded", () => {
-        const message = "{{ message|escapejs }}";
-        if (message) {
-            const utterance = new SpeechSynthesisUtterance(message);
-            utterance.lang = "en-US";
-            utterance.rate = 0.8; // speed (1 = normal)
-            utterance.pitch = 1; // tone of voice (1 = normal)
-            speechSynthesis.speak(utterance);
-        }
+      const message = "{{ message|escapejs }}";
+      if (message) {
+        try {
+          const utterance = new SpeechSynthesisUtterance(message);
+          utterance.lang = "en-US";
+          utterance.rate = 0.9;
+          utterance.pitch = 1;
+          speechSynthesis.speak(utterance);
+        } catch(_) {}
+      }
     });
-</script>
-
+  </script>
+</body>
 </html>

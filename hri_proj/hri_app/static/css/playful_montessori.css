@@ -1,0 +1,255 @@
+/* === Playful Montessori (site-wide, pill buttons & centered layouts) === */
+:root{
+  /* neutrals */
+  --bg:#fffdf7; --panel:#ffffff; --text:#1f2937; --muted:#475569;
+
+  /* mood-board colors */
+  --brand:#f59e0b;      /* gold/amber */
+  --brand-2:#10b981;    /* green */
+  --brand-3:#ef4444;    /* red (alerts) */
+  --mint:#8dd3c7; --sage:#9cc589; --coral:#f29aa3; --peach:#f4a93a;
+
+  /* new hues for menu variety */
+  --blue:#60a5fa;       /* sky blue */
+  --purple:#a78bfa;     /* lilac/purple */
+
+  --radius:22px;
+  --shadow:0 10px 34px rgba(31,41,55,.14);
+}
+
+html,body{height:100%}
+body{
+  margin:0; color:var(--text);
+  font-family:"Nunito", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Helvetica Neue";
+  background:var(--bg);
+}
+
+/* ===== LAYOUT / CONTAINERS ===== */
+.center-screen{
+  min-height:100dvh; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; padding:28px;
+}
+.stack-xl > * + *{ margin-top:32px } 
+.stack-s  > * + *{ margin-top:14px }
+
+/* Card used on most pages */
+.montessori-card{
+  width:min(1100px,94vw);
+  background:var(--panel);
+  border-radius:var(--radius);
+  border:4px solid #fef3c7;
+  box-shadow:var(--shadow);
+  padding:28px 24px;
+}
+
+/* “Game menu” card that centers its content */
+.stack-buttons{
+  width:min(1000px,94vw);
+  background:var(--panel);
+  border-radius:var(--radius);
+  border:4px solid #fef3c7;
+  box-shadow:var(--shadow);
+  padding:36px;
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  gap:14px;               /* even vertical space between children */
+}
+
+.centered-card{ min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center }
+.game-shell{ width:100% }
+.game-header{ text-align:center; margin:8px 0 14px }
+.actions{ display:grid; gap:12px; grid-auto-rows:minmax(56px,auto); width:min(420px,90vw); margin:12px auto 0 }
+
+.montessori-heading{ font-weight:1000; font-size:clamp(28px,3.4vw,40px); margin:0 0 6px; letter-spacing:.2px }
+
+/* ===== GLOBAL PILL BUTTONS ===== */
+button, .btn, .montessori-btn, a[role="button"], input[type="submit"]{
+  display:inline-flex; align-items:center; justify-content:center; gap:.8ch;
+  min-height:60px; padding:16px 24px;
+  border:0; border-radius:999px;
+  background:var(--brand); color:#2b303a;
+  font-weight:1000; font-size:20px; letter-spacing:.2px;
+  cursor:pointer; text-decoration:none;
+  box-shadow:0 10px 0 rgba(0,0,0,.07);
+  transition: transform .08s ease, filter .12s ease, box-shadow .12s ease;
+}
+button:hover, .btn:hover, .montessori-btn:hover,
+a[role="button"]:hover, input[type="submit"]:hover{ transform:translateY(-2px) }
+button:active, .btn:active, .montessori-btn:active,
+a[role="button"]:active, input[type="submit"]:active{ transform:translateY(0) }
+
+/* Emoji/icon bubble via data-attribute (optional) */
+button[data-icon]::before, .btn[data-icon]::before, .montessori-btn[data-icon]::before, a[role="button"][data-icon]::before{
+  content:attr(data-icon);
+  font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",emoji;
+  font-size:1.1em; display:inline-grid; place-items:center;
+  width:42px; height:42px; border-radius:999px;
+  background:rgba(255,255,255,.45);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5);
+}
+
+/* Theme color variants (use these class names in your HTML) */
+.montessori-btn-gold{   background:var(--brand);  color:#2b303a } /* default gold */
+.montessori-btn-green{  background:var(--brand-2); color:#083b2a }
+.montessori-btn-blue{   background:var(--blue);   color:#0b2551 }
+.montessori-btn-purple{ background:var(--purple); color:#ffffff }
+.montessori-btn-red{    background:var(--brand-3); color:#ffffff } /* for warnings */
+
+.montessori-btn[disabled], .montessori-btn:disabled{ filter:grayscale(.3) brightness(.95); cursor:not-allowed }
+
+/* Small icon span (if you prefer markup instead of data-icon) */
+.montessori-btn .btn-icon{
+  display:inline-grid; place-items:center; width:36px; height:36px; border-radius:999px;
+  background:rgba(255,255,255,.45); box-shadow:inset 0 1px 0 rgba(255,255,255,.5);
+  font-size:1.05em;
+}
+
+/* ===== PUZZLE TABS (Puzzle 1…10) ===== */
+.tab{
+  display:flex; flex-wrap:wrap; justify-content:center; gap:8px;
+  margin:8px 0 14px;
+}
+.tab button{
+  all:unset; display:inline-flex; align-items:center; gap:.6ch;
+  padding:10px 16px; border-radius:999px; font-weight:900; cursor:pointer;
+  box-shadow:0 3px 0 rgba(0,0,0,.06);
+}
+.tab button:nth-child(4n+1){ background:var(--brand);   color:#2b303a }  /* gold   */
+.tab button:nth-child(4n+2){ background:var(--brand-2); color:#083b2a }  /* green  */
+.tab button:nth-child(4n+3){ background:var(--blue);    color:#0b2551 }  /* blue   */
+.tab button:nth-child(4n+4){ background:var(--purple);  color:#ffffff }  /* purple */
+.tab button.active{ outline:3px dashed #1f2937; outline-offset:2px; transform:translateY(-1px) }
+.tab button::before{
+  content:"🧩"; width:28px; height:28px; display:inline-grid; place-items:center;
+  border-radius:999px; background:rgba(255,255,255,.4); font-size:1rem;
+}
+
+/* ===== TIMER CHIP ===== */
+#timer.timer, .timer{
+  font-size:42px; padding:14px 24px; margin:10px auto;
+  background:#ffffff; color:#1f2937;
+  border-radius:999px; box-shadow:0 6px 18px rgba(0,0,0,.08); width:fit-content;
+}
+
+/* ===== FORMS (labels/inputs spacing) ===== */
+form > * + *{ margin-top:12px }
+.field{ display:flex; flex-direction:column; gap:10px }
+.field label{ font-weight:900 }
+input[type="text"], input[type="number"], input[type="email"], input[type="search"], select, textarea{
+  background:#fff7ed; border:2px dashed #f59e0b77; border-radius:14px;
+  padding:16px 16px; min-height:56px; font-size:18px; color:var(--text);
+}
+input:focus, select:focus, textarea:focus{ outline:3px dashed #f59e0b; outline-offset:3px }
+
+/* ===== TABLES ===== */
+table{ border-collapse:separate; border-spacing:0; width:100% }
+th,td{ border:2px solid #fde68a; padding:14px; text-align:center; vertical-align:middle }
+th{ background:#fef3c7; color:#7c2d12; font-weight:1000 }
+.name-cell{ text-align:left; padding-left:16px; font-weight:900 }
+
+/* ===== EMOJI RATING ===== */
+.rating{ display:flex; gap:14px; justify-content:center; align-items:center; padding-block:8px }
+.emoji-label{
+  display:inline-grid; place-items:center; width:44px; height:44px; font-size:24px;
+  border-radius:14px; user-select:none; cursor:pointer;
+  background:#fff7ed; border:2px dashed #f59e0b77; transition:transform .1s;
+}
+.emoji-label:hover{ transform:translateY(-3px) rotate(-2deg) }
+input[type="radio"]{ display:none }
+input[type="radio"]:checked + .emoji-label{
+  background:#fde68a; border-color:#d97706; transform:translateY(-7px) scale(1.08) rotate(-1deg)
+}
+
+/* ===== ACCESSIBILITY / REDUCED MOTION ===== */
+:focus-visible{ outline:3px dashed #f59e0b; outline-offset:4px; border-radius:14px }
+@media (prefers-reduced-motion: reduce){
+  button, .btn, .montessori-btn, a[role="button"], input[type="submit"], .emoji-label{ transition:none }
+}
+
+/* ===== PUZZLE LAYOUT HELPERS (match your templates) ===== */
+.puzzle-wrapper{ display:flex; flex-direction:column; align-items:center; gap:6px; margin-top:16px; position:relative }
+.puzzle-row{ display:flex; justify-content:center; gap:6px }
+.puzzle-center{ display:flex; align-items:center; justify-content:center; gap:6px }
+.puzzle-col{ display:flex; flex-direction:column; gap:6px }
+.full_image{ opacity:.3; border-radius:10px; box-shadow:0 0 5px rgba(0,0,0,.3) }
+.piece{ border-radius:6px; box-shadow:0 0 3px rgba(0,0,0,.2); cursor:grab }
+.piece.locked{ opacity:.8; cursor:default; box-shadow:0 0 3px rgba(0,255,0,.45) }
+.dropzone-wrapper{ position:relative; display:inline-block }
+
+/* === Team form layout === */
+.player_row{
+  display:grid;
+  grid-template-columns: 140px minmax(260px, 1fr) auto; /* label | input grows | (optional) remove btn */
+  align-items:center;
+  gap:16px;
+}
+
+/* Make text inputs match the Montessori field style */
+.montessori-label{ font-weight:900; color:var(--text) }
+
+.montessori-input{
+  background:#fff7ed;
+  border:2px dashed #f59e0b77;
+  border-radius:14px;
+  padding:16px 16px;
+  min-height:56px;
+  font-size:18px;
+  color:var(--text);
+  width:100%;
+}
+.montessori-input:focus{ outline:3px dashed #f59e0b; outline-offset:3px }
+
+/* Group the bottom buttons nicely and center them */
+.button-group{
+  display:flex;
+  gap:16px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+
+/* Mobile: stack label on top of input for small widths */
+@media (max-width: 560px){
+  .player_row{
+    grid-template-columns: 1fr;   /* label, then input, then remove btn full-width */
+    gap:10px;
+  }
+  .player_row .remove_btn{ width:max-content; justify-self:center }
+}
+
+/* === Global spacing improvement for forms and buttons === */
+.stack-buttons > * + * {
+  margin-top: 28px; /* increase space between stacked elements */
+}
+
+/* Add a bit more breathing room between form fields */
+form > * + * {
+  margin-top: 20px;
+}
+
+/* Add extra gap below labels and selects */
+.field label {
+  margin-bottom: 6px;
+}
+select, input[type="text"], textarea {
+  margin-bottom: 10px;
+}
+
+/* === Uniform Montessori Button Widths === */
+.montessori-btn {
+  min-width: 240px;
+  justify-content: center;
+}
+
+.button-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+/* Mobile adjustment */
+@media (max-width: 480px) {
+  .montessori-btn {
+    width: 100%;
+  }
+}
+

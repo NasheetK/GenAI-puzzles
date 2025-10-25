@@ -1,83 +1,102 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-<div> Form Your Team </div>
+  <meta charset="UTF-8" />
+  <title>Form Your Team</title>
 
-<form id="team_form" method="POST" action="{% url 'form_team_collaborative_multi' %}">
-    <div id="player_container">
+  <!-- Shared Montessori styles -->
+  <link rel="stylesheet" href="{% static 'css/playful_montessori.css' %}">
+  <link rel="stylesheet" href="{% static 'css/home_menu_montessori.css' %}">
+
+  <!-- Fonts (okay to keep if your CSS doesn't already import them) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body class="montessori-bg">
+ <main class="center-screen">
+  <div class="montessori-card stack-buttons">
+    <h1 class="montessori-heading">Name</h1>
+
+    <form id="team_form" method="POST" action="{% url 'form_team_collaborative_multi' %}">
+      {% csrf_token %}
+
+      <div id="player_container">
         {% for i in "x"|center:count %}
         <div class="player_row">
-            <label>Player {{ forloop.counter }}:</label>
-            <input type="text" name="member_{{ forloop.counter }}" placeholder="Type your name here">
-            {% if count > 3 %}
-                <button type="button" class="remove_btn" onclick="remove_row(this)">🗑️</button>
-            {% endif %}
+          <label class="montessori-label">Player {{ forloop.counter }}:</label>
+          <input type="text" class="montessori-input" name="member_{{ forloop.counter }}" placeholder="Type your name here">
+          {% if count > 3 %}
+            <!-- fixed: remove_row -> removeRow -->
+            <button type="button" class="montessori-btn montessori-btn-red remove_btn" onclick="removeRow(this)">🗑️</button>
+          {% endif %}
         </div>
         {% endfor %}
-    </div>
+      </div>
 
-    {% if add_flag %}
-        <button type="button" id="add_btn">➕ Add Player</button>
-    {% endif %}
-    <button type="submit">Submit</button>
-</form>
+      <div class="button-group">
+        {% if add_flag %}
+          <button type="button" id="add_btn" class="montessori-btn montessori-btn-blue">➕ Add Player</button>
+        {% endif %}
+        <button type="submit" class="montessori-btn montessori-btn-green">Submit</button>
+      </div>
+    </form>
 
-<form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
-    <button type="submit">Exit</button>
-</form>
+    <form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
+      <button type="submit" class="montessori-btn montessori-btn-red">Exit</button>
+    </form>
+  </div>
+  </main>
 
-<script>
-
+  <script>
     window.addEventListener("DOMContentLoaded", () => {
+      try {
         const message = "Please enter the names of players.";
         const utterance = new SpeechSynthesisUtterance(message);
         utterance.lang = "en-US";
-        utterance.rate = 0.8;
+        utterance.rate = 0.9;
         utterance.pitch = 1;
         speechSynthesis.speak(utterance);
+      } catch(_) {}
     });
 
     const container = document.getElementById("player_container");
     const add_btn = document.getElementById("add_btn");
 
     let count = {{ count }};
-
     const add_flag = {{ add_flag|yesno:"true,false" }};
 
-    if (add_flag) {
-        add_btn.addEventListener("click", function() {
-            count++;
-            const row = document.createElement("div");
-            row.classList.add("player_row");
-            row.innerHTML = `
-                <label>Player ${count}:</label>
-                <input type="text" name="member_${count}" placeholder="Type your name here">
-                <button type="button" class="remove_btn" onclick="removeRow(this)">🗑️</button>
-            `;
-            container.appendChild(row);
-            renumberPlayers();
-        });
-    }
-    function removeRow(btn) {
-        btn.parentElement.remove();
+    if (add_flag && add_btn) {
+      add_btn.addEventListener("click", function() {
+        count++;
+        const row = document.createElement("div");
+        row.classList.add("player_row");
+        row.innerHTML = `
+          <label class="montessori-label">Player ${count}:</label>
+          <input type="text" class="montessori-input" name="member_${count}" placeholder="Type your name here">
+          <button type="button" class="montessori-btn montessori-btn-red remove_btn" onclick="removeRow(this)">🗑️</button>
+        `;
+        container.appendChild(row);
         renumberPlayers();
+      });
+    }
+
+    function removeRow(btn) {
+      btn.parentElement.remove();
+      renumberPlayers();
     }
 
     function renumberPlayers() {
-        const rows = container.querySelectorAll(".player_row");
-        rows.forEach((row, index) => {
-            const label = row.querySelector("label");
-            const input = row.querySelector("input");
-            label.textContent = `Player ${index + 1}:`;
-            input.name = `member_${index + 1}`;
-        });
-        count = rows.length;
+      const rows = container.querySelectorAll(".player_row");
+      rows.forEach((row, index) => {
+        const label = row.querySelector("label");
+        const input = row.querySelector("input");
+        if (label) label.textContent = `Player ${index + 1}:`;
+        if (input) input.name = `member_${index + 1}`;
+      });
+      count = rows.length;
     }
-</script>
-
+  </script>
 </body>
 </html>

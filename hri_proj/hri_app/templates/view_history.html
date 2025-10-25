@@ -2,103 +2,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>View History</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 30px;
-        }
-        select {
-            padding: 6px;
-            font-size: 14px;
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 15px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: center;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        .hidden {
-            display: none;
-        }
-    </style>
-</head>
-<body>
-    <h2>Player History</h2>
+  <meta charset="UTF-8">
+  <title>View History</title>
 
-    <!-- Dropdown for selecting player -->
-    <label for="player_select">Select Player:</label>
-    <select id="player_select">
-        <option value="">-- Choose a player --</option>
-        {% for player in players %}
+  <!-- Shared Montessori styles -->
+  <link rel="stylesheet" href="{% static 'css/playful_montessori.css' %}">
+  <link rel="stylesheet" href="{% static 'css/home_menu_montessori.css' %}">
+
+  <!-- Minimal local styles for the table & visibility -->
+  <style>
+    .history-wrap { max-width: 1100px; margin: 0 auto; }
+    .table-wrap { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: center; }
+    th { background: #f7f7f7; }
+    .hidden { display: none; }
+    .controls { display: grid; gap: 10px; max-width: 360px; margin: 16px auto 0; }
+    label { font-weight: 700; margin-right: 8px; }
+    select { padding: 10px 12px; border-radius: 12px; border: 1px solid #e5e7eb; }
+  </style>
+</head>
+<body class="montessori-bg">
+   <main class="center-screen">
+  <div class="montessori-card stack-buttons history-wrap">
+    <h1 class="montessori-heading" style="text-align:center;">Player History</h1>
+
+    <!-- Player selector -->
+    <div class="controls" style="max-width: 520px;">
+      <div style="display:flex; gap:10px; align-items:center; justify-content:center;">
+        <label for="player_select">Select Player:</label>
+        <select id="player_select" class="montessori-input" style="flex:1;">
+          <option value="">-- Choose a player --</option>
+          {% for player in players %}
             <option value="{{ player }}">{{ player }}</option>
-        {% endfor %}
-    </select>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="button" class="montessori-btn montessori-btn-blue" onclick="window.history.back();">Back</button>
+    </div>
 
     <!-- History table -->
-    <table id="record_table" class="hidden">
+    <div class="table-wrap">
+      <table id="record_table" class="hidden">
         <thead>
-            <tr>
-                <th>Record ID</th>
-                <th>Team Member</th>
-                <th>Game Mode</th>
-                <th>Difficulty</th>
-                <th>Puzzle Amount</th>
-                <th>Start Time</th>
-                <th>End Time</th>
-                <th>Self Feeling Score</th>
-                <th>Self Task Score</th>
-                <th>AI Task Score</th>
-            </tr>
+          <tr>
+            <th>Record ID</th>
+            <th>Team Member</th>
+            <th>Game Mode</th>
+            <th>Difficulty</th>
+            <th>Puzzle Amount</th>
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Self Feeling Score</th>
+            <th>Self Task Score</th>
+            <th>AI Task Score</th>
+          </tr>
         </thead>
         <tbody></tbody>
-    </table>
+      </table>
+    </div>
+  </div>
+</main>
 
-    <button type="button" onclick="window.history.back();">Back</button>
+  <script>
+    // Convert Django data into JS
+    const player_records = JSON.parse('{{ player_records|escapejs }}');
+    const player_select = document.getElementById('player_select');
+    const record_table = document.getElementById('record_table');
+    const tbody = record_table.querySelector('tbody');
 
-    <script>
-        // Convert Django data into JS
-        const player_records = JSON.parse('{{ player_records|escapejs }}');
-        const player_select = document.getElementById('player_select');
-        const record_table = document.getElementById('record_table');
-        const tbody = record_table.querySelector('tbody');
+    player_select.addEventListener('change', function() {
+      const selected_player = this.value;
+      tbody.innerHTML = '';
 
-        player_select.addEventListener('change', function() {
-            const selected_player = this.value;
-            tbody.innerHTML = ''; // clear previous rows
+      const records = player_records[selected_player];
+      if (!records) {
+        record_table.classList.add('hidden');
+        return;
+      }
 
-            const records = player_records[selected_player];
-            if (!records) {
-                record_table.classList.add('hidden');
-                return;
-            }
-
-            for (const r of records) {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${r.record_id}</td>
-                    <td>${r.team_member}</td>
-                    <td>${r.game_mode}</td>
-                    <td>${r.difficulty}</td>
-                    <td>${r.puzzle_amount}</td>
-                    <td>${r.time_start}</td>
-                    <td>${r.time_end}</td>
-                    <td>${r.self_feeling_score}</td>
-                    <td>${r.self_task_score}</td>
-                    <td>${r.ai_task_score}</td>
-                `;
-                tbody.appendChild(row);
-            }
-            record_table.classList.remove('hidden');
-        });
-    </script>
+      for (const r of records) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${r.record_id}</td>
+          <td>${r.team_member}</td>
+          <td>${r.game_mode}</td>
+          <td>${r.difficulty}</td>
+          <td>${r.puzzle_amount}</td>
+          <td>${r.time_start}</td>
+          <td>${r.time_end}</td>
+          <td>${r.self_feeling_score}</td>
+          <td>${r.self_task_score}</td>
+          <td>${r.ai_task_score}</td>
+        `;
+        tbody.appendChild(row);
+      }
+      record_table.classList.remove('hidden');
+    });
+  </script>
 </body>
 </html>

@@ -1,42 +1,60 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+  <meta charset="UTF-8">
+  <title>Design Your Own Puzzles</title>
+
+  <!-- Shared Montessori styles -->
+  <link rel="stylesheet" href="{% static 'css/playful_montessori.css' %}">
+  <link rel="stylesheet" href="{% static 'css/home_menu_montessori.css' %}">
+
+  <!-- (Optional) Fonts if not already imported by your CSS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
-<body>
-<div> Design Your Own Puzzles </div>
-<form method="POST">
-    <label>Difficulty:</label>
-    <select name="difficulty">
+<body class="montessori-bg">
+ <main class="center-screen">
+  <div class="montessori-card stack-buttons">
+    <h1 class="montessori-heading">Design your own puzzles</h1>
+
+    <form method="POST">
+      {% csrf_token %}
+
+      <label class="montessori-label">Difficulty:</label>
+      <select name="difficulty" class="montessori-input">
         {% for d in difficulties %}
-            <option value="{{ d }}">{{ d }}</option>
+          <option value="{{ d }}">{{ d }}</option>
         {% endfor %}
-    </select><br>
+      </select><br>
 
-    <label>Character:</label>
-    <select name="character">
+      <label class="montessori-label">Character:</label>
+      <select name="character" class="montessori-input">
         {% for c in characters %}
-            <option value="{{ c }}">{{ c }}</option>
+          <option value="{{ c }}">{{ c }}</option>
         {% endfor %}
-    </select><br>
+      </select><br>
 
-    <label>Activity:</label>
-    <select name="activity">
+      <label class="montessori-label">Activity:</label>
+      <select name="activity" class="montessori-input">
         {% for ac in activities %}
-            <option value="{{ ac }}">{{ ac }}</option>
+          <option value="{{ ac }}">{{ ac }}</option>
         {% endfor %}
-    </select><br>
+      </select><br>
 
-    <button type="submit">Create Puzzle</button>
-</form>
+      <button type="submit" class="montessori-btn montessori-btn-green">Create Puzzle</button>
+    </form>
 
-<form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
-    <button type="submit">Exit</button>
-</form>
-<form id="view_history" method="POST" action="{% url 'view_history' %}">
-    <button type="submit">View History</button>
-</form>
+    <form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
+      <button type="submit" class="montessori-btn montessori-btn-red">Exit</button>
+    </form>
 
+    <form id="view_history" method="POST" action="{% url 'view_history' %}">
+      {% csrf_token %}
+      <button type="submit" class="montessori-btn montessori-btn-blue">View History</button>
+    </form>
+  </div>
+  </main>
 </body>
 </html>

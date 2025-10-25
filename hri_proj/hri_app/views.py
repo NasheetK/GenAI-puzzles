@@ -143,7 +143,7 @@ def instruction(request):
 
 @csrf_exempt
 def solve_collab(request):
-    tolerance = 10 # tolerance for slight differences between drop location and target location
+    
 
     players = request.session.get('players', [])
     mode = request.session.get('mode', 'collaborative')
@@ -174,14 +174,31 @@ def solve_collab(request):
         height = abs(target_bottom - target_top)
         grid_width = width / 4
         grid_height = height / 4
-
+        tolerance = min(grid_width, grid_height) * 0.2 # tolerance for slight differences between drop location and target location 
         target_row = piece_id // 4
         target_col = np.mod(piece_id, 4)
         print(target_row, target_col, grid_height, grid_width)
 
         target_x = target_col * grid_width + target_left
         target_y = target_row * grid_height + target_top
-        success = (abs(x - target_x) <= tolerance and abs(y - target_y) <= tolerance)
+        
+        # New code to determine success based on center of piece
+        piece_w = grid_width
+        piece_h = grid_height
+        cx = x + piece_w / 2.0
+        cy = y + piece_h / 2.0
+
+        # Which cell is the center currently over?
+        col_at_drop = int((cx - target_left) // grid_width)
+        row_at_drop = int((cy - target_top) // grid_height)
+
+        # In-bounds check (avoid negatives/out-of-range from fast drags)
+        in_bounds = (0 <= col_at_drop < 4) and (0 <= row_at_drop < 4)
+
+        success = in_bounds and (row_at_drop == target_row) and (col_at_drop == target_col)
+        
+        
+        # success = (abs(x - target_x) <= tolerance and abs(y - target_y) <= tolerance)
         print(x, y, target_x, target_y, success)
 
         # record to log and return the verification results
