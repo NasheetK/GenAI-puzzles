@@ -66,9 +66,15 @@
 
     let count = {{ count }};
     const add_flag = {{ add_flag|yesno:"true,false" }};
+    const max_count = 6; // maximum 6 players
 
     if (add_flag && add_btn) {
       add_btn.addEventListener("click", function() {
+        if (count >= max_count) {
+          alert(`Maximum ${max_count} players allowed.`);
+          return;
+        }
+
         count++;
         const row = document.createElement("div");
         row.classList.add("player_row");

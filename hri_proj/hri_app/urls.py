@@ -14,6 +14,7 @@ urlpatterns = [
     path('instruction/', views.instruction, name='instruction'),
     path('solve_compete/', views.solve_compete, name='solve_compete'),
     path('solve_collab/', views.solve_collab, name='solve_collab'),
+    path('solve_collab_ai/', views.solve_collab_ai, name='solve_collab_ai'),
     path('save_personal_record_detail/', views.save_personal_record_detail, name='save_personal_record_detail'),
     path('save_personal_record_general/', views.save_personal_record_general, name='save_personal_record_general'),
     path('manual_rating/', views.manual_rating, name='manual_rating'),

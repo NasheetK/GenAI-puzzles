@@ -14,7 +14,7 @@
     html, body {
       margin: 0;
       padding: 0;
-      overflow: hidden;
+      overflow: auto; /*hidden;*/
     }
 
     .tab { display: flex; gap: 8px; margin-bottom: 10px; }
@@ -121,6 +121,7 @@
     <p class="game-header">Drag images below and drop them following the patterns shown.</p>
 
     <div class="timer" id="timer">00:00</div>
+    <h2 id="current-player" style="text-align:center; margin-bottom:10px; color:#4b5563;">Current Player: —</h2>
 
     <div class="tab">
       {% for img, img_id, pieces in puzzle_config.full_info_list %}
@@ -194,6 +195,11 @@
 <script>
   // ----- Globals -----
   let full_info_list = [];
+  const players = {{ players|safe }};
+  console.log({players});
+  players.push("AI player");
+  console.log({players});
+  let current_player_idx = 0;
   let puzzle_count = 0;
   let completed = [];
   let current_tab = 0;
@@ -238,13 +244,27 @@
     // Mark first button active if present
     const firstBtn = document.querySelector(".tab button");
     if (firstBtn) firstBtn.classList.add("active");
+    switchToNextPlayer();
   });
+
+  function switchToNextPlayer() {
+    const player_name = document.getElementById("current-player");
+    if (players.length > 0 && player_name) {
+      player_name.textContent = `Current Player: ${players[current_player_idx]}`;
+    }
+    console.log(`Current player ${players[current_player_idx]}`);
+    if (players[current_player_idx] === "AI player") {
+      setTimeout(AIPiecePlacement, 1000); // 1 second delay for realism
+    }
+
+  }
 
   // Switch tab
   async function showTab(index) {
     if (index > 0 && !completed[index - 1]) {
-      alert(`Please complete Puzzle ${index} first!`);
-      return;
+      // alert(`Please complete Puzzle ${index} first!`);
+      // return;
+      send_record_to_log("pause", index - 1);
     }
 
     current_tab = index;
@@ -347,15 +367,19 @@
     const dropzone = document.getElementById("tab" + current_tab + "_dropzone");
     const dropzone_pos = dropzone.getBoundingClientRect();
 
+    const scrollX = window.scrollX || document.documentElement.scrollLeft;
+    const scrollY = window.scrollY || document.documentElement.scrollTop;
+
     const drag_pos_data = new FormData();
     drag_pos_data.append("index", current_tab);
+    drag_pos_data.append("name", players[current_player_idx]);
     drag_pos_data.append("piece_id", current_item.id);
-    drag_pos_data.append("x", piece_pos.left);
-    drag_pos_data.append("y", piece_pos.top);
-    drag_pos_data.append("target_left", dropzone_pos.left);
-    drag_pos_data.append("target_top", dropzone_pos.top);
-    drag_pos_data.append("target_right", dropzone_pos.right);
-    drag_pos_data.append("target_bottom", dropzone_pos.bottom);
+    drag_pos_data.append("x", piece_pos.left + scrollX);
+    drag_pos_data.append("y", piece_pos.top + scrollY);
+    drag_pos_data.append("target_left", dropzone_pos.left + scrollX);
+    drag_pos_data.append("target_top", dropzone_pos.top + scrollY);
+    drag_pos_data.append("target_right", dropzone_pos.right + scrollX);
+    drag_pos_data.append("target_bottom", dropzone_pos.bottom + scrollY);
 
     try {
       const response = await fetch("{% url 'solve_collab' %}", {
@@ -366,8 +390,12 @@
 
       if (data.success) {
         // snap offset within the dropzone
-        const dx = data.correct_x - dropzone_pos.left;
-        const dy = data.correct_y - dropzone_pos.top;
+        const scrollX = window.scrollX || document.documentElement.scrollLeft;
+        const scrollY = window.scrollY || document.documentElement.scrollTop;
+        // const dx = data.correct_x - dropzone_pos.left;
+        // const dy = data.correct_y - dropzone_pos.top;
+        const dx = data.correct_x - (dropzone_pos.left + scrollX);
+        const dy = data.correct_y - (dropzone_pos.top + scrollY);
 
         // remove placeholder
         if (placeholder && placeholder.parentNode) {
@@ -382,7 +410,10 @@
         current_item.classList.add("locked");
         dropzone.appendChild(current_item);
 
+        current_player_idx = (current_player_idx + 1) % players.length;
+        switchToNextPlayer();
         checkPuzzleComplete(current_tab);
+
       } else {
         // revert to original spot
         if (placeholder && placeholder.parentNode) {
@@ -411,6 +442,100 @@
     current_item = null;
     placeholder = null;
   });
+
+
+  async function AIPiecePlacement(){
+    const candidate_pieces = document.querySelectorAll(`#tab${current_tab} .piece:not(.locked)`);
+    current_item = candidate_pieces[0];
+
+    console.log(`AI will place piece ${current_item.id}`);
+
+    const piece_pos = current_item.getBoundingClientRect();
+    console.log(`AI selected piece position ${piece_pos}`);
+    const dropzone = document.getElementById("tab" + current_tab + "_dropzone");
+    const dropzone_pos = dropzone.getBoundingClientRect();
+
+    const scrollX = window.scrollX || document.documentElement.scrollLeft;
+    const scrollY = window.scrollY || document.documentElement.scrollTop;
+
+    const drag_pos_data = new FormData();
+    drag_pos_data.append("index", current_tab);
+    drag_pos_data.append("name", players[current_player_idx]);
+    drag_pos_data.append("piece_id", current_item.id);
+    drag_pos_data.append("x", piece_pos.left + scrollX);
+    drag_pos_data.append("y", piece_pos.top + scrollY);
+    drag_pos_data.append("target_left", dropzone_pos.left + scrollX);
+    drag_pos_data.append("target_top", dropzone_pos.top + scrollY);
+    drag_pos_data.append("target_right", dropzone_pos.right + scrollX);
+    drag_pos_data.append("target_bottom", dropzone_pos.bottom + scrollY);
+
+    try {
+      const response = await fetch("{% url 'solve_collab_ai' %}", {
+        method: "POST",
+        body: drag_pos_data,
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        // snap offset within the dropzone
+        const scrollX = window.scrollX || document.documentElement.scrollLeft;
+        const scrollY = window.scrollY || document.documentElement.scrollTop;
+        // const dx = data.correct_x - dropzone_pos.left;
+        // const dy = data.correct_y - dropzone_pos.top;
+        const dx = data.correct_x - (dropzone_pos.left + scrollX);
+        const dy = data.correct_y - (dropzone_pos.top + scrollY);
+
+        // remove placeholder
+        if (placeholder && placeholder.parentNode) {
+          placeholder.parentNode.removeChild(placeholder);
+        }
+
+        // place inside dropzone at snapped coords
+        current_item.style.position = "absolute";
+        current_item.style.left = dx + "px";
+        current_item.style.top = dy + "px";
+        current_item.style.zIndex = 2;
+        current_item.classList.add("locked");
+        dropzone.appendChild(current_item);
+
+        checkPuzzleComplete(current_tab);
+
+      } else {
+        // revert to original spot
+        if (placeholder && placeholder.parentNode) {
+          placeholder.parentNode.replaceChild(current_item, placeholder);
+        }
+        current_item.style.position = "";
+        current_item.style.left = "";
+        current_item.style.top = "";
+        current_item.style.width = "";
+        current_item.style.height = "";
+        current_item.style.zIndex = "";
+      }
+    } catch (error) {
+      console.error("Error in piece position verification!", error);
+      if (placeholder && placeholder.parentNode) {
+        placeholder.parentNode.replaceChild(current_item, placeholder);
+      }
+      current_item.style.position = "";
+      current_item.style.left = "";
+      current_item.style.top = "";
+      current_item.style.width = "";
+      current_item.style.height = "";
+      current_item.style.zIndex = "";
+    }
+
+    current_item = null;
+    placeholder = null;
+
+    setTimeout(() => {
+      current_player_idx = (current_player_idx + 1) % players.length;
+      switchToNextPlayer();
+      checkPuzzleComplete(current_tab);
+    }, 1000);
+  }
+
+
 
   // ----- Timer -----
   function formatTime(totalSeconds) {

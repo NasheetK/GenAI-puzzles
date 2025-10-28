@@ -59,7 +59,7 @@
     <div class="action-forms">
       <form id="ai_rating" method="POST" action="{% url 'ai_rating' %}">
         {% csrf_token %}
-        <button type="submit" class="montessori-btn montessori-btn-purple">View AI Rating</button>
+        <button type="submit" class="montessori-btn montessori-btn-purple" style="display:none;">View AI Rating</button>
       </form>
 
       <form id="view_history" method="POST" action="{% url 'view_history' %}">
