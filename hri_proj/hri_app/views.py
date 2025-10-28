@@ -69,8 +69,8 @@ def form_team_collaborative_multi(request):
 @csrf_exempt
 def puzzle_settings(request):
     difficulties = ['Beginner', 'Easy', 'Medium', 'Hard', 'Expert']
-    characters = ['Rabbit', 'Cat', 'Dog', 'Tiger']
-    activities = ['School', 'Playground', 'Forest']
+    characters = ['Rabbit', 'Cat', 'Dog', 'Tiger', 'Bear']
+    activities = ['School']#, 'Playground', 'Forest']
     # bg_colors = ['Red', 'Green', 'Blue', 'Yellow']
 
     players = request.session.get('players', [])
@@ -327,7 +327,6 @@ def solve_compete(request):
 
 def manual_rating(request):
     players = request.session.get('players', [])
-    players = [x for x in players if x != 'AI player']
     mode = request.session.get('mode', 'collaborative')
     # print(players)
     if len(players) == 2:

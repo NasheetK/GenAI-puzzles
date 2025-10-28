@@ -57,4 +57,17 @@
   </div>
   </main>
 </body>
+<script>
+  window.addEventListener("DOMContentLoaded", () => {
+      try {
+        const message = "Please set your preferences for the puzzles.";
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.lang = "en-US";
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        speechSynthesis.speak(utterance);
+      } catch(_) {}
+  });
+</script>
+
 </html>

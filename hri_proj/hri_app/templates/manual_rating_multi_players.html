@@ -77,6 +77,18 @@
 </main>
 
   <script>
+
+    window.addEventListener("DOMContentLoaded", () => {
+      try {
+        const message = "How do you think you did? How do you feel about the puzzles?";
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.lang = "en-US";
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        speechSynthesis.speak(utterance);
+      } catch(_) {}
+    });
+
     const players = {{ players|safe }};
     const tasks = ['Satisfy with what you did?','How you feel about the tasks?'];
     const emojis = ['😡','😕','😐','🙂','😄'];
