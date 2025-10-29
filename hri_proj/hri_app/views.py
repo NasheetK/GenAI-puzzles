@@ -295,6 +295,102 @@ def solve_collab_ai(request):
 
 
 @csrf_exempt
+def solve_compete(request):
+    # print(request.method)
+
+    players = request.session.get('players', [])
+    mode = request.session.get('mode', 'collaborative')
+    difficulty = request.session.get('difficulty')
+    character = request.session.get('character')
+    activity = request.session.get('activity')
+
+    puzzle_config = {
+        'difficulty': difficulty,
+        'character': character,
+        'activity': activity,
+        'players': players,
+        'mode': mode
+    }
+
+    if request.method == "POST":
+
+        piece_full_id = request.POST.get("piece_id")
+        print(piece_full_id)
+        piece_id = int(piece_full_id.split('_')[2]) # one more tab name than collab mode
+        x = float(request.POST.get("x", 0))
+        y = float(request.POST.get("y", 0))
+        target_left = float(request.POST.get("target_left", 0))
+        target_top = float(request.POST.get("target_top", 0))
+        target_right = float(request.POST.get("target_right", 0))
+        target_bottom = float(request.POST.get("target_bottom", 0))
+        print(piece_full_id, target_left, target_top, target_right, target_bottom)
+        width = abs(target_right - target_left)
+        height = abs(target_bottom - target_top)
+        grid_width = width / 4
+        grid_height = height / 4
+        tolerance = min(grid_width,
+                        grid_height) * 0.2  # tolerance for slight differences between drop location and target location
+        target_row = piece_id // 4
+        target_col = np.mod(piece_id, 4)
+        print(target_row, target_col, grid_height, grid_width)
+
+        target_x = target_col * grid_width + target_left
+        target_y = target_row * grid_height + target_top
+
+        # check by the center of the piece (success if fall onto the correct square grid)
+        # piece_w = grid_width
+        # piece_h = grid_height
+        # cx = x + piece_w / 2.0
+        # cy = y + piece_h / 2.0
+        # current drop center
+        # col_at_drop = int((cx - target_left) // grid_width)
+        # row_at_drop = int((cy - target_top) // grid_height)
+        # avoid negatives or out-of-range from fast drags
+        # in_bounds = (0 <= col_at_drop < 4) and (0 <= row_at_drop < 4)
+        # success = in_bounds and (row_at_drop == target_row) and (col_at_drop == target_col)
+
+        # check by small tolerance, need higher accuracy than above center-based approach
+        success = (abs(x - target_x) <= tolerance and abs(y - target_y) <= tolerance)
+        print(x, y, target_x, target_y, success)
+
+        # record to log and return the verification results
+        PieceDragLog.objects.create(piece_id=piece_full_id, x=x, y=y, timestamp=timezone.now(), success=success)
+
+        if success:
+            full_info_list = request.session.get('full_info_list', [])
+            name = request.POST.get("name")
+            # players = ['test_name_1', 'test_name_2']
+            index = int(request.POST.get("index"))
+            action = 'piece_matched'
+            # print(full_info_list)
+            puzzle_id = full_info_list[index][1]  # get puzzle_id
+
+            PersonalRecordDetail.objects.create(
+                name=name,
+                puzzle_id=puzzle_id,
+                action=action,
+                timestamp=timezone.now()
+            )
+
+        return JsonResponse({
+            "success": bool(success),
+            "correct_x": float(target_x),
+            "correct_y": float(target_y),
+        })
+
+    else:
+        full_img_list, full_id_list, piece_detail_list = create_puzzle(puzzle_config)
+        full_info_list = list(zip(full_img_list, full_id_list, piece_detail_list))
+        request.session['full_info_list'] = full_info_list
+        puzzle_config['full_info_list'] = full_info_list
+        # print(full_info_list)
+        # print(len(full_info_list))
+
+    return render(request, "solve_puzzle_competitive.html",
+                  {'puzzle_config': puzzle_config, 'players': players})
+
+
+@csrf_exempt
 def save_personal_record_detail(request):
     if request.method == "POST":
         full_info_list = request.session.get('full_info_list', [])
@@ -320,9 +416,7 @@ def save_personal_record_general(request):
     assert NotImplementedError
 
 
-@csrf_exempt
-def solve_compete(request):
-    assert NotImplementedError
+
 
 
 def manual_rating(request):
