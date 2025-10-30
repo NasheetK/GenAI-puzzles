@@ -189,20 +189,20 @@ def solve_collab(request):
         target_y = target_row * grid_height + target_top
 
         # check by the center of the piece (success if fall onto the correct square grid)
-        # piece_w = grid_width
-        # piece_h = grid_height
-        # cx = x + piece_w / 2.0
-        # cy = y + piece_h / 2.0
+        piece_w = grid_width
+        piece_h = grid_height
+        cx = x + piece_w / 2.0
+        cy = y + piece_h / 2.0
         # current drop center
-        # col_at_drop = int((cx - target_left) // grid_width)
-        # row_at_drop = int((cy - target_top) // grid_height)
+        col_at_drop = int((cx - target_left) // grid_width)
+        row_at_drop = int((cy - target_top) // grid_height)
         # avoid negatives or out-of-range from fast drags
-        # in_bounds = (0 <= col_at_drop < 4) and (0 <= row_at_drop < 4)
-        # success = in_bounds and (row_at_drop == target_row) and (col_at_drop == target_col)
+        in_bounds = (0 <= col_at_drop < 4) and (0 <= row_at_drop < 4)
+        success = in_bounds and (row_at_drop == target_row) and (col_at_drop == target_col)
 
         # check by small tolerance, need higher accuracy than above center-based approach
-        success = (abs(x - target_x) <= tolerance and abs(y - target_y) <= tolerance)
-        print(x, y, target_x, target_y, success)
+        # success = (abs(x - target_x) <= tolerance and abs(y - target_y) <= tolerance)
+        # print(x, y, target_x, target_y, success)
 
         # record to log and return the verification results
         PieceDragLog.objects.create(piece_id=piece_full_id, x=x, y=y, timestamp=timezone.now(), success=success)
@@ -338,20 +338,20 @@ def solve_compete(request):
         target_y = target_row * grid_height + target_top
 
         # check by the center of the piece (success if fall onto the correct square grid)
-        # piece_w = grid_width
-        # piece_h = grid_height
-        # cx = x + piece_w / 2.0
-        # cy = y + piece_h / 2.0
+        piece_w = grid_width
+        piece_h = grid_height
+        cx = x + piece_w / 2.0
+        cy = y + piece_h / 2.0
         # current drop center
-        # col_at_drop = int((cx - target_left) // grid_width)
-        # row_at_drop = int((cy - target_top) // grid_height)
+        col_at_drop = int((cx - target_left) // grid_width)
+        row_at_drop = int((cy - target_top) // grid_height)
         # avoid negatives or out-of-range from fast drags
-        # in_bounds = (0 <= col_at_drop < 4) and (0 <= row_at_drop < 4)
-        # success = in_bounds and (row_at_drop == target_row) and (col_at_drop == target_col)
+        in_bounds = (0 <= col_at_drop < 4) and (0 <= row_at_drop < 4)
+        success = in_bounds and (row_at_drop == target_row) and (col_at_drop == target_col)
 
         # check by small tolerance, need higher accuracy than above center-based approach
-        success = (abs(x - target_x) <= tolerance and abs(y - target_y) <= tolerance)
-        print(x, y, target_x, target_y, success)
+        # success = (abs(x - target_x) <= tolerance and abs(y - target_y) <= tolerance)
+        # print(x, y, target_x, target_y, success)
 
         # record to log and return the verification results
         PieceDragLog.objects.create(piece_id=piece_full_id, x=x, y=y, timestamp=timezone.now(), success=success)
