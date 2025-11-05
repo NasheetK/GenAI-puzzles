@@ -1,117 +1,127 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Puzzle Game</title>
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-        }
+  <meta charset="UTF-8">
+  <title>Puzzle Game</title>
 
-        .tab { display: flex; gap: 8px; margin-bottom: 10px; }
-        .tab button {
-            padding: 6px 12px;
-            border: 1px solid #ccc;
-            background: #f5f5f5;
-            cursor: pointer;
-            border-radius: 8px;
-            font-weight: 600;
-        }
-        .tab button.active { background: #4285f4; color: white; }
+  <!-- Shared Montessori styles -->
+  <link rel="stylesheet" href="{% static 'css/playful_montessori.css' %}">
+  <link rel="stylesheet" href="{% static 'css/home_menu_montessori.css' %}">
 
-        .tabcontent { display: none; }
+  <style>
+    /* === Keep the original layout/behavior styles exactly (cosmetic-only changes elsewhere) === */
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: auto; /*hidden;*/
+    }
 
-        .timer {
-            font-size:48px;
-            padding:20px 30px;
-            background:white;
-            border-radius:8px;
-            box-shadow:0 6px 18px rgba(0,0,0,0.08);
-        }
+    .tab { display: flex; gap: 8px; margin-bottom: 10px; }
+    .tab button {
+      padding: 6px 12px;
+      border: 1px solid #ccc;
+      background: #f5f5f5;
+      cursor: pointer;
+      border-radius: 8px;
+      font-weight: 600;
+    }
+    .tab button.active { background: #4285f4; color: white; }
 
-        /* === Puzzle Layout === */
-        .puzzle-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            margin-top: 20px;
-        }
+    .tabcontent { display: none; }
 
-        .puzzle-row {
-            display: flex;
-            justify-content: center;
-            gap: 5px;
-        }
+    .timer {
+      font-size:48px;
+      padding:20px 30px;
+      background:white;
+      border-radius:8px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.08);
+      margin: 8px auto;
+    }
 
-        .puzzle-center {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-        }
+    /* === Puzzle Layout (unchanged) === */
+    .puzzle-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      margin-top: 20px;
+      position: relative;
+    }
 
-        .puzzle-col {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
+    .puzzle-row {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+    }
 
-        .full_image {
-            opacity: 0.3;
-            width: 300px;
-            height: 300px;
-            border-radius: 10px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.3);
-        }
+    .puzzle-center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
 
-        .piece {
-            width: 75px;
-            height: 75px;
-            border-radius: 5px;
-            box-shadow: 0 0 3px rgba(0,0,0,0.2);
-            cursor: grab;
-        }
+    .puzzle-col {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
 
-        .piece.locked {
-            opacity: 0.7;
-            cursor: default;
-            box-shadow: 0 0 3px rgba(0,255,0,0.5);
-        }
+    .full_image {
+      opacity: 0.3;
+      width: 300px;
+      height: 300px;
+      border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.3);
+    }
 
-        .piece-placeholder {
-            display: inline-block;
-            vertical-align: top;
-            width: 75px;
-            height: 75px;
-        }
+    .piece {
+      width: 75px;
+      height: 75px;
+      border-radius: 5px;
+      box-shadow: 0 0 3px rgba(0,0,0,0.2);
+      cursor: grab;
+    }
 
-        .dropzone-wrapper {
-            position: relative;
-            display: inline-block;
-            width: 300px;
-            height: 300px;
-        }
+    .piece.locked {
+      opacity: 0.7;
+      cursor: default;
+      box-shadow: 0 0 3px rgba(0,255,0,0.5);
+    }
 
-        .puzzle-wrapper {
-            position: relative;
-        }
+    .piece-placeholder {
+      display: inline-block;
+      vertical-align: top;
+      width: 75px;
+      height: 75px;
+    }
 
-        [id*="_dropzone"] {
-          position: relative;
-        }
+    .dropzone-wrapper {
+      position: relative;
+      display: inline-block;
+      width: 300px;
+      height: 300px;
+    }
 
-    </style>
+    [id*="_dropzone"] {
+      position: relative;
+    }
+
+    /* Small cosmetic container so the timer/tabs/buttons sit nicely within your theme */
+    .game-shell { max-width: 1100px; margin: 0 auto; }
+    .game-header { text-align:center; margin: 8px 0; }
+    .actions { display:grid; gap:10px; max-width:360px; margin: 12px auto; }
+  </style>
 </head>
-<body>
-    <div> Solve the Puzzles </div>
-    <div> Drag images below and drop them following the patterns shown. </div>
+<body class="montessori-bg">
+   <main class="center-screen">
+  <div class="montessori-card stack-buttons game-shell">
+    <h1 class="montessori-heading game-header">Solve the Puzzles</h1>
+<!--    <p class="game-header">Drag pieces below and drop them following the patterns shown.</p>-->
 
     <div class="timer" id="timer">00:00</div>
+    <h2 id="current-player" style="text-align:center; margin-bottom:10px; color:#4b5563;">Current Player: —</h2>
 
     <div class="tab">
       {% for img, img_id, pieces in puzzle_config.full_info_list %}
@@ -122,261 +132,454 @@
     </div>
 
     {% for img, img_id, pieces in puzzle_config.full_info_list %}
-      <div class="tabcontent" id="tab{{ forloop.counter0 }}">
+      <div class="tabcontent" 
+      id="tab{{ forloop.counter0 }}"
+      style="{% if forloop.first %}display:block{% endif %}">
         <div class="puzzle-wrapper">
-            <!-- up 4 pieces -->
-            <div class="puzzle-row top">
-                {% for piece_id, piece in pieces|slice:":4" %}
-                    <img src="{% static piece %}" id="{{ img_id }}_{{ piece_id }}"
-                         class="piece" draggable="true">
-                {% endfor %}
+          <!-- up 4 pieces -->
+          <div class="puzzle-row top">
+            {% for piece_id, piece in pieces|slice:":4" %}
+              <img src="{% static piece %}" id="{{ img_id }}_{{ piece_id }}"
+                   class="piece" draggable="true">
+            {% endfor %}
+          </div>
+
+          <div class="puzzle-center">
+            <!-- left 4 pieces -->
+            <div class="puzzle-col left">
+              {% for piece_id, piece in pieces|slice:"4:8" %}
+                <img src="{% static piece %}" id="{{ img_id }}_{{ piece_id }}"
+                     class="piece" draggable="true">
+              {% endfor %}
             </div>
 
-            <div class="puzzle-center">
-                <!-- left 4 pieces -->
-                <div class="puzzle-col left">
-                    {% for piece_id, piece in pieces|slice:"4:8" %}
-                        <img src="{% static piece %}" id="{{ img_id }}_{{ piece_id }}"
-                             class="piece" draggable="true">
-                    {% endfor %}
-                </div>
-
-                <!-- original img -->
-                <div class="dropzone-wrapper" id="tab{{ forloop.counter0 }}_dropzone">
-                    <img src="{% static img %}" class="full_image" draggable="false" alt="Full puzzle">
-                </div>
-
-                <!-- right 4 pieces -->
-                <div class="puzzle-col right">
-                    {% for piece_id, piece in pieces|slice:"8:12" %}
-                        <img src="{% static piece %}" id="{{ img_id }}_{{ piece_id }}"
-                             class="piece" draggable="true">
-                    {% endfor %}
-                </div>
+            <!-- original img -->
+            <div class="dropzone-wrapper" id="tab{{ forloop.counter0 }}_dropzone">
+              <img src="{% static img %}" class="full_image" draggable="false" alt="Full puzzle">
             </div>
 
-            <!-- down 4 pieces -->
-            <div class="puzzle-row bottom">
-                {% for piece_id, piece in pieces|slice:"12:" %}
-                    <img src="{% static piece %}" id="{{ img_id }}_{{ piece_id }}"
-                         class="piece" draggable="true">
-                {% endfor %}
+            <!-- right 4 pieces -->
+            <div class="puzzle-col right">
+              {% for piece_id, piece in pieces|slice:"8:12" %}
+                <img src="{% static piece %}" id="{{ img_id }}_{{ piece_id }}"
+                     class="piece" draggable="true">
+              {% endfor %}
             </div>
+          </div>
+
+          <!-- down 4 pieces -->
+          <div class="puzzle-row bottom">
+            {% for piece_id, piece in pieces|slice:"12:" %}
+              <img src="{% static piece %}" id="{{ img_id }}_{{ piece_id }}"
+                   class="piece" draggable="true">
+            {% endfor %}
+          </div>
         </div>
       </div>
     {% endfor %}
 
-    <form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
-        <button type="submit">Exit</button>
-    </form>
-    <form id="view_history" method="POST" action="{% url 'view_history' %}">
-        <button type="submit">View History</button>
-    </form>
+    <div class="actions">
+      <form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
+        <button type="submit" class="montessori-btn montessori-btn-red">Exit</button>
+      </form>
+      <form id="view_history" method="POST" action="{% url 'view_history' %}">
+        {% csrf_token %}
+        <button type="submit" class="montessori-btn montessori-btn-blue">View History</button>
+      </form>
+    </div>
+  </div>
+</main>
 
-    <script>
-        const full_info_list = {{ puzzle_config.full_info_list|safe }};
-        const puzzle_count = full_info_list.length;
-        let completed = Array(puzzle_count).fill(false);
-        let current_tab = 0;
+  {{ puzzle_config.full_info_list|json_script:"puzzle-data" }}
 
-        async function showTab(index) {
-            if (index > 0 && !completed[index - 1]) {
-                alert(`Please complete Puzzle ${index} first!`);
-                return;
-            }
+<script>
+  // ----- Globals -----
 
-            current_tab = index;
-            const tabs = document.querySelectorAll(".tabcontent");
-            const buttons = document.querySelectorAll(".tab button");
+  window.addEventListener("DOMContentLoaded", () => {
+      try {
+        const message = "Please drag pieces below and drop them following the patterns shown.";
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.lang = "en-US";
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        speechSynthesis.speak(utterance);
+      } catch(_) {}
+    });
 
-            tabs.forEach(t => t.style.display = "none");
-            buttons.forEach(b => b.classList.remove("active"));
+  // setTimeout(() => {
+  //     console.log("5 seconds passed — continue now!");
+  //   }, 5000);
 
-            tabs[index].style.display = "block";
-            buttons[index].classList.add("active");
+  let full_info_list = [];
+  const players = {{ players|safe }};
+  console.log({players});
+  players.push("AI player");
+  console.log({players});
+  let current_player_idx = 0;
+  let puzzle_count = 0;
+  let completed = [];
+  let current_tab = 0;
 
-            send_record_to_log("start", index);
-            puzzle_solving();
+  // drag state
+  let offsetX = 0, offsetY = 0;
+  let current_item = null;
+  let placeholder = null;
+
+  // timer state
+  const start_minutes = 1;
+  const next_url = "{% url 'manual_rating' %}";
+  let remaining_seconds = start_minutes * 60;
+  let timer_full_puzzle = null;
+  let timer_interval = null;
+
+  // Parse JSON and initialize after DOM is ready
+  document.addEventListener("DOMContentLoaded", () => {
+    // Parse the json_script payload
+    try {
+      const el = document.getElementById("puzzle-data");
+      if (el && el.textContent) {
+        full_info_list = JSON.parse(el.textContent);
+      }
+    } catch (e) {
+      console.error("Could not parse puzzle data:", e);
+    }
+
+    // Set counts/state
+    puzzle_count = Array.isArray(full_info_list) ? full_info_list.length : 0;
+    completed = Array(puzzle_count).fill(false);
+    current_tab = 0;
+
+    // Cache timer element and start ticking
+    timer_full_puzzle = document.getElementById("timer");
+    tick();
+    timer_interval = setInterval(tick, 1000);
+
+    // First tab is already visible via inline style; just bind handlers for it
+    puzzle_solving();
+
+    // Mark first button active if present
+    const firstBtn = document.querySelector(".tab button");
+    if (firstBtn) firstBtn.classList.add("active");
+    switchToNextPlayer();
+  });
+
+  function switchToNextPlayer() {
+    const player_name = document.getElementById("current-player");
+    if (players.length > 0 && player_name) {
+      player_name.textContent = `Current Player: ${players[current_player_idx]}`;
+    }
+
+    const message = "Current Player is " + players[current_player_idx];
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.lang = "en-US";
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    speechSynthesis.speak(utterance);
+
+    console.log(`Current player ${players[current_player_idx]}`);
+    if (players[current_player_idx] === "AI player") {
+      setTimeout(AIPiecePlacement, 1000); // 1 second delay for realism
+    }
+
+  }
+
+  // Switch tab
+  async function showTab(index) {
+    if (index > 0 && !completed[index - 1]) {
+      // alert(`Please complete Puzzle ${index} first!`);
+      // return;
+      send_record_to_log("pause", index - 1);
+    }
+
+    current_tab = index;
+    const tabs = document.querySelectorAll(".tabcontent");
+    const buttons = document.querySelectorAll(".tab button");
+
+    tabs.forEach(t => (t.style.display = "none"));
+    buttons.forEach(b => b.classList.remove("active"));
+
+    if (tabs[index]) tabs[index].style.display = "block";
+    if (buttons[index]) buttons[index].classList.add("active");
+
+    send_record_to_log("start", index);
+    puzzle_solving(); // (re)bind mousedown on pieces in this tab (bound once per element)
+  }
+
+  // Check completion of current puzzle
+  async function checkPuzzleComplete(index) {
+    const items = document.querySelectorAll(`#tab${index} .piece`);
+    const allLocked = Array.from(items).every(i => i.classList.contains("locked"));
+
+    if (allLocked && !completed[index]) {
+      completed[index] = true;
+      send_record_to_log("completed", index);
+      alert("Puzzle " + (index + 1) + " completed!");
+
+      if (index + 1 < puzzle_count) {
+        showTab(index + 1);
+      } else {
+        window.location.href = "{% url 'manual_rating' %}";
+      }
+    }
+  }
+
+  // Log helper
+  async function send_record_to_log(action, index) {
+    try {
+      const record_data = new FormData();
+      record_data.append("action", action);
+      record_data.append("index", index);
+      await fetch("{% url 'save_personal_record_detail' %}", {
+        method: "POST",
+        body: record_data,
+      });
+    } catch (err) {
+      console.error("Error sending record:", err);
+    }
+  }
+
+  // Bind drag start to the pieces in the visible tab
+  function puzzle_solving() {
+    const items = document.querySelectorAll(`#tab${current_tab} .piece`);
+
+    items.forEach(item => {
+      // prevent duplicate listeners if user revisits a tab
+      if (item.dataset.bound === "1") return;
+      item.dataset.bound = "1";
+
+      item.addEventListener("mousedown", e => {
+        if (item.classList.contains("locked")) return;
+        e.preventDefault();
+
+        current_item = item;
+        const rect = current_item.getBoundingClientRect();
+
+        // placeholder to preserve layout
+        placeholder = document.createElement("div");
+        placeholder.className = "piece-placeholder";
+        placeholder.style.width = rect.width + "px";
+        placeholder.style.height = rect.height + "px";
+        current_item.parentNode.insertBefore(placeholder, current_item);
+
+        // fix position during drag
+        current_item.style.position = "fixed";
+        current_item.style.left = rect.left + "px";
+        current_item.style.top = rect.top + "px";
+        current_item.style.width = rect.width + "px";
+        current_item.style.height = rect.height + "px";
+        current_item.style.zIndex = 9999;
+        current_item.style.cursor = "grabbing";
+
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+      });
+    });
+  }
+
+  // Document-level mousemove/mouseup (bound once)
+  document.addEventListener("mousemove", e => {
+    if (!current_item) return;
+    current_item.style.left = e.clientX - offsetX + "px";
+    current_item.style.top = e.clientY - offsetY + "px";
+  });
+
+  document.addEventListener("mouseup", async e => {
+    if (!current_item) return;
+    current_item.style.cursor = "grab";
+
+    const piece_pos = current_item.getBoundingClientRect();
+    const dropzone = document.getElementById("tab" + current_tab + "_dropzone");
+    const dropzone_pos = dropzone.getBoundingClientRect();
+
+    const scrollX = window.scrollX || document.documentElement.scrollLeft;
+    const scrollY = window.scrollY || document.documentElement.scrollTop;
+
+    const drag_pos_data = new FormData();
+    drag_pos_data.append("index", current_tab);
+    drag_pos_data.append("name", players[current_player_idx]);
+    drag_pos_data.append("piece_id", current_item.id);
+    drag_pos_data.append("x", piece_pos.left + scrollX);
+    drag_pos_data.append("y", piece_pos.top + scrollY);
+    drag_pos_data.append("target_left", dropzone_pos.left + scrollX);
+    drag_pos_data.append("target_top", dropzone_pos.top + scrollY);
+    drag_pos_data.append("target_right", dropzone_pos.right + scrollX);
+    drag_pos_data.append("target_bottom", dropzone_pos.bottom + scrollY);
+
+    try {
+      const response = await fetch("{% url 'solve_collab' %}", {
+        method: "POST",
+        body: drag_pos_data,
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        // snap offset within the dropzone
+        const scrollX = window.scrollX || document.documentElement.scrollLeft;
+        const scrollY = window.scrollY || document.documentElement.scrollTop;
+        // const dx = data.correct_x - dropzone_pos.left;
+        // const dy = data.correct_y - dropzone_pos.top;
+        const dx = data.correct_x - (dropzone_pos.left + scrollX);
+        const dy = data.correct_y - (dropzone_pos.top + scrollY);
+
+        // remove placeholder
+        if (placeholder && placeholder.parentNode) {
+          placeholder.parentNode.removeChild(placeholder);
         }
 
-        // console.log("full_info_list:", full_info_list);
-        // console.log("puzzle_count:", puzzle_count);
+        // place inside dropzone at snapped coords
+        current_item.style.position = "absolute";
+        current_item.style.left = dx + "px";
+        current_item.style.top = dy + "px";
+        current_item.style.zIndex = 2;
+        current_item.classList.add("locked");
+        dropzone.appendChild(current_item);
 
-        showTab(0); // show the first tab
+        current_player_idx = (current_player_idx + 1) % players.length;
+        switchToNextPlayer();
+        checkPuzzleComplete(current_tab);
 
-        async function checkPuzzleComplete(index) {
-            const items = document.querySelectorAll(`#tab${index} .piece`);
-            // puzzle completed only if all pieces in this tab are locked
-            const allLocked = Array.from(items).every(i => i.classList.contains('locked'));
+      } else {
+        // revert to original spot
+        if (placeholder && placeholder.parentNode) {
+          placeholder.parentNode.replaceChild(current_item, placeholder);
+        }
+        current_item.style.position = "";
+        current_item.style.left = "";
+        current_item.style.top = "";
+        current_item.style.width = "";
+        current_item.style.height = "";
+        current_item.style.zIndex = "";
+      }
+    } catch (error) {
+      console.error("Error in piece position verification!", error);
+      if (placeholder && placeholder.parentNode) {
+        placeholder.parentNode.replaceChild(current_item, placeholder);
+      }
+      current_item.style.position = "";
+      current_item.style.left = "";
+      current_item.style.top = "";
+      current_item.style.width = "";
+      current_item.style.height = "";
+      current_item.style.zIndex = "";
+    }
 
-            if (allLocked && !completed[index]) {
-                completed[index] = true;
-                send_record_to_log("completed", index);
-                alert('Puzzle ' + (index + 1) + ' completed!');
+    current_item = null;
+    placeholder = null;
+  });
 
-                if (index + 1 < puzzle_count) {
-                    showTab(index + 1); // jump to the next tab
-                } else {
-                    // all tabs finished
-                    window.location.href = "{% url 'manual_rating' %}";
-                }
-            }
+
+  async function AIPiecePlacement(){
+    const candidate_pieces = document.querySelectorAll(`#tab${current_tab} .piece:not(.locked)`);
+    current_item = candidate_pieces[0];
+
+    console.log(`AI will place piece ${current_item.id}`);
+
+    const piece_pos = current_item.getBoundingClientRect();
+    console.log(`AI selected piece position ${piece_pos}`);
+    const dropzone = document.getElementById("tab" + current_tab + "_dropzone");
+    const dropzone_pos = dropzone.getBoundingClientRect();
+
+    const scrollX = window.scrollX || document.documentElement.scrollLeft;
+    const scrollY = window.scrollY || document.documentElement.scrollTop;
+
+    const drag_pos_data = new FormData();
+    drag_pos_data.append("index", current_tab);
+    drag_pos_data.append("name", players[current_player_idx]);
+    drag_pos_data.append("piece_id", current_item.id);
+    drag_pos_data.append("x", piece_pos.left + scrollX);
+    drag_pos_data.append("y", piece_pos.top + scrollY);
+    drag_pos_data.append("target_left", dropzone_pos.left + scrollX);
+    drag_pos_data.append("target_top", dropzone_pos.top + scrollY);
+    drag_pos_data.append("target_right", dropzone_pos.right + scrollX);
+    drag_pos_data.append("target_bottom", dropzone_pos.bottom + scrollY);
+
+    try {
+      const response = await fetch("{% url 'solve_collab_ai' %}", {
+        method: "POST",
+        body: drag_pos_data,
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        // snap offset within the dropzone
+        const scrollX = window.scrollX || document.documentElement.scrollLeft;
+        const scrollY = window.scrollY || document.documentElement.scrollTop;
+        // const dx = data.correct_x - dropzone_pos.left;
+        // const dy = data.correct_y - dropzone_pos.top;
+        const dx = data.correct_x - (dropzone_pos.left + scrollX);
+        const dy = data.correct_y - (dropzone_pos.top + scrollY);
+
+        // remove placeholder
+        if (placeholder && placeholder.parentNode) {
+          placeholder.parentNode.removeChild(placeholder);
         }
 
+        // place inside dropzone at snapped coords
+        current_item.style.position = "absolute";
+        current_item.style.left = dx + "px";
+        current_item.style.top = dy + "px";
+        current_item.style.zIndex = 2;
+        current_item.classList.add("locked");
+        dropzone.appendChild(current_item);
 
-        async function send_record_to_log(action, index) {
-            try {
-                const record_data = new FormData();
-                record_data.append("action", action);
-                record_data.append("index", index);
-                await fetch("{% url 'save_personal_record_detail' %}", {
-                    method: "POST",
-                    body: record_data,
-                });
-            } catch (err) {
-                console.error("Error sending record:", err);
-            }
+        checkPuzzleComplete(current_tab);
+
+      } else {
+        // revert to original spot
+        if (placeholder && placeholder.parentNode) {
+          placeholder.parentNode.replaceChild(current_item, placeholder);
         }
+        current_item.style.position = "";
+        current_item.style.left = "";
+        current_item.style.top = "";
+        current_item.style.width = "";
+        current_item.style.height = "";
+        current_item.style.zIndex = "";
+      }
+    } catch (error) {
+      console.error("Error in piece position verification!", error);
+      if (placeholder && placeholder.parentNode) {
+        placeholder.parentNode.replaceChild(current_item, placeholder);
+      }
+      current_item.style.position = "";
+      current_item.style.left = "";
+      current_item.style.top = "";
+      current_item.style.width = "";
+      current_item.style.height = "";
+      current_item.style.zIndex = "";
+    }
 
-        function puzzle_solving() {
-            const items = document.querySelectorAll(`#tab${current_tab} .piece`);
-            let offsetX = 0, offsetY = 0;
-            let current_item = null;
-            let placeholder = null;
+    current_item = null;
+    placeholder = null;
 
-            items.forEach(item => {
-                item.addEventListener("mousedown", e => {
-                    if (item.classList.contains("locked")) return;
-                    e.preventDefault();
+    setTimeout(() => {
+      current_player_idx = (current_player_idx + 1) % players.length;
+      switchToNextPlayer();
+      checkPuzzleComplete(current_tab);
+    }, 1000);
+  }
 
-                    current_item = item;
-                    const rect = current_item.getBoundingClientRect();
 
-                    // create placeholder to occupy the space of completed pieces
-                    placeholder = document.createElement("div");
-                    placeholder.className = "piece-placeholder";
-                    placeholder.style.width = rect.width + "px";
-                    placeholder.style.height = rect.height + "px";
-                    current_item.parentNode.insertBefore(placeholder, current_item);
 
-                    // obtain the settings for current_item, avoid size change during movements
-                    current_item.style.position = "fixed";
-                    current_item.style.left = rect.left + "px";
-                    current_item.style.top = rect.top + "px";
-                    current_item.style.width = rect.width + "px";
-                    current_item.style.height = rect.height + "px";
-                    current_item.style.zIndex = 9999;
-                    current_item.style.cursor = "grabbing";
+  // ----- Timer -----
+  function formatTime(totalSeconds) {
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
 
-                    offsetX = e.clientX - rect.left;
-                    offsetY = e.clientY - rect.top;
-                });
-            });
-
-            document.addEventListener("mousemove", e => {
-                if (!current_item) return;
-                current_item.style.left = e.clientX - offsetX + "px";
-                current_item.style.top = e.clientY - offsetY + "px";
-            });
-
-            document.addEventListener("mouseup", async e => {
-                if (!current_item) return;
-                current_item.style.cursor = "grab";
-
-                const piece_pos = current_item.getBoundingClientRect();
-                const dropzone = document.getElementById("tab" + current_tab + "_dropzone");
-                const dropzone_pos = dropzone.getBoundingClientRect();
-
-                const drag_pos_data = new FormData();
-                drag_pos_data.append("index", current_tab);
-                drag_pos_data.append("piece_id", current_item.id);
-                drag_pos_data.append("x", piece_pos.left);
-                drag_pos_data.append("y", piece_pos.top);
-                drag_pos_data.append("target_left", dropzone_pos.left);
-                drag_pos_data.append("target_top", dropzone_pos.top);
-                drag_pos_data.append("target_right", dropzone_pos.right);
-                drag_pos_data.append("target_bottom", dropzone_pos.bottom);
-
-                try {
-                    const response = await fetch("{% url 'solve_collab' %}", {
-                        method: "POST",
-                        body: drag_pos_data,
-                    });
-                    const data = await response.json();
-
-                    if (data.success) {
-                        // calculate the drift of the piece with respect to the dropzone
-                        const dx = data.correct_x - dropzone_pos.left;
-                        const dy = data.correct_y - dropzone_pos.top;
-
-                        // remove corresponding placeholder
-                        if (placeholder && placeholder.parentNode) {
-                            placeholder.parentNode.removeChild(placeholder);
-                        }
-
-                        // put into dropzone
-                        current_item.style.position = "absolute";
-                        current_item.style.left = dx + "px";
-                        current_item.style.top = dy + "px";
-                        current_item.style.zIndex = 2;
-                        current_item.classList.add("locked");
-                        dropzone.appendChild(current_item);
-
-                        checkPuzzleComplete(current_tab);
-                    } else {
-                        // replace to original location if not a correct piece
-                        if (placeholder && placeholder.parentNode) {
-                            placeholder.parentNode.replaceChild(current_item, placeholder);
-                        }
-                        current_item.style.position = "";
-                        current_item.style.left = "";
-                        current_item.style.top = "";
-                        current_item.style.width = "";
-                        current_item.style.height = "";
-                        current_item.style.zIndex = "";
-                    }
-                } catch (error) {
-                    console.error("Error in piece position verification!", error);
-                    if (placeholder && placeholder.parentNode) {
-                        placeholder.parentNode.replaceChild(current_item, placeholder);
-                    }
-                    current_item.style.position = "";
-                    current_item.style.left = "";
-                    current_item.style.top = "";
-                    current_item.style.width = "";
-                    current_item.style.height = "";
-                    current_item.style.zIndex = "";
-                }
-
-                current_item = null;
-                placeholder = null;
-            });
-        }
-
-        const start_minutes = 1;
-        const next_url = "{% url 'manual_rating' %}";
-        let remaining_seconds = start_minutes * 60;
-        const timer_full_puzzle = document.getElementById('timer');
-
-        function formatTime(totalSeconds) {
-            const m = Math.floor(totalSeconds / 60);
-            const s = totalSeconds % 60;
-            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-        }
-
-        function tick() {
-            timer_full_puzzle.textContent = formatTime(remaining_seconds);
-            if (remaining_seconds <= 0) {
-                clearInterval(timer_interval);
-                alert('Timeout!');
-                send_record_to_log("terminated", current_tab);
-                window.location.href = next_url;
-            }
-            remaining_seconds -= 1;
-        }
-
-        tick();
-        const timer_interval = setInterval(tick, 1000);
-    </script>
+  function tick() {
+    if (!timer_full_puzzle) return;
+    timer_full_puzzle.textContent = formatTime(remaining_seconds);
+    if (remaining_seconds <= 0) {
+      clearInterval(timer_interval);
+      alert("Timeout!");
+      send_record_to_log("terminated", current_tab);
+      window.location.href = next_url;
+      return;
+    }
+    remaining_seconds -= 1;
+  }
+</script>
 </body>
 </html>

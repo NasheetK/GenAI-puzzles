@@ -1,0 +1,5 @@
+
+.icon{display:inline-block;inline-size:1.4em;block-size:1.4em;line-height:1;vertical-align:-.15em;margin-right:.75rem;color:currentColor}
+.icon--lg{inline-size:1.6em;block-size:1.6em}
+.icon--xl{inline-size:1.8em;block-size:1.8em}
+.btn .icon{inline-size:1.4em;block-size:1.4em;margin-right:.9rem}

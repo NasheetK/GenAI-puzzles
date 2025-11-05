@@ -1,15 +1,32 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <meta charset="UTF-8" />
+    <title>AI Rating</title>
+
+    <!-- Montessori font + global theme -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900;1000&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'css/themes/playful_montessori.css' %}" />
 </head>
 <body>
+  <main class="center-screen">
+    <h1 class="title-main">AI Rating</h1>
 
-    {{ message }}
+    <div class="field">
+      <label style="font-weight:1000;">Message</label>
+      <div style="font-size:1.1rem">{{ message }}</div>
+    </div>
 
-    <button type="button" onclick="window.history.back();">Back</button>
+    <div>
+      <!-- Same behavior; now a pill button with an icon -->
+      <button type="button" class="btn-peach" data-icon="⬅️" onclick="window.history.back();">Back</button>
+    </div>
+  </main>
 
-
+  <!-- Optional: click & puzzle sounds (safe; does not alter your logic) -->
+  <script defer src="{% static 'js/ui-enhancements.js' %}"></script>
 </body>
 </html>

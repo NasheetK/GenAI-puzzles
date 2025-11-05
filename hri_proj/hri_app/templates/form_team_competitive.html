@@ -1,41 +1,56 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-<div> Enter Your Name </div>
+  <meta charset="UTF-8">
+  <title>Enter Your Name</title>
 
-<form id="team_form" method="POST" action="{% url 'form_team_compete' %}">
-    <div id="player_container">
+  <!-- Montessori shared styles -->
+  <link rel="stylesheet" href="{% static 'css/playful_montessori.css' %}">
+  <link rel="stylesheet" href="{% static 'css/home_menu_montessori.css' %}">
+
+  <!-- Montessori-friendly fonts (optional redundancy if already in CSS) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+
+<body class="montessori-bg">
+ <main class="center-screen">
+  <div class="montessori-card stack-buttons">
+    <h1 class="montessori-heading">Enter Your Name</h1>
+
+    <form id="team_form" method="POST" action="{% url 'form_team_compete' %}">
+      {% csrf_token %}
+      <div id="player_container">
         {% for i in "x"|center:2 %}
         <div class="player_row">
-            <label>Team {{ forloop.counter }}:</label>
-            <input type="text" name="member_{{ forloop.counter }}" placeholder="Type your name here">
+          <label class="montessori-label">Team {{ forloop.counter }}:</label>
+          <input type="text" class="montessori-input" name="member_{{ forloop.counter }}" placeholder="Type your name here">
         </div>
         {% endfor %}
-    </div>
+      </div>
 
-   <button type="submit">Submit</button>
-</form>
+      <div class="button-group">
+        <button type="submit" class="montessori-btn montessori-btn-green">Submit</button>
+      </div>
+    </form>
 
-<form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
-    <button type="submit">Exit</button>
-</form>
+    <form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
+      <button type="submit" class="montessori-btn montessori-btn-red">Exit</button>
+    </form>
+  </div>
+  </main>
 
-</body>
-
-<script>
-
+  <script>
     window.addEventListener("DOMContentLoaded", () => {
-        const message = "Please enter the names of players.";
-        const utterance = new SpeechSynthesisUtterance(message);
-        utterance.lang = "en-US";
-        utterance.rate = 0.8;
-        utterance.pitch = 1;
-        speechSynthesis.speak(utterance);
+      const message = "Please enter the names of players.";
+      const utterance = new SpeechSynthesisUtterance(message);
+      utterance.lang = "en-US";
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      speechSynthesis.speak(utterance);
     });
-</script>
-
+  </script>
+</body>
 </html>

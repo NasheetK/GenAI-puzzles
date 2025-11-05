@@ -21,7 +21,7 @@ def create_puzzle(puzzle_config):
     #     img_amount = int(np.floor(difficulty_value))
     # else:
     #     img_amount = max(int(np.floor(len(players) * difficulty_value / 2)), 1) # at least one puzzle
-    img_amount = 10
+    img_amount = 6
     full_img_list = []
     full_id_list = []
     piece_detail_list = []

@@ -1,0 +1,21 @@
+/* Centered hero + pill menu helpers for home/mode pages */
+:root{ --peach:#f4a93a; --mint:#8dd3c7; --sage:#9cc589; --coral:#f29aa3; }
+.home-hero{ min-height:100dvh; display:grid; place-items:center; padding:32px 20px }
+.home-card{ width:min(860px,92vw); display:grid; gap:28px }
+.home-title{ margin:0; font-size:clamp(36px,5.2vw,72px); font-weight:1000; text-align:center; color:#3a3f49 }
+.home-subtitle{ margin:0; font-size:clamp(18px,2.6vw,28px); font-weight:800; text-align:center; color:#525964 }
+.menu{ display:grid; gap:18px }
+.menu button, .menu .btn, .menu a[role="button"]{
+  display:flex; align-items:center; gap:16px; justify-content:flex-start;
+  min-height:84px; padding:0 28px; border-radius:999px; font-size:clamp(22px,2.6vw,34px);
+  font-weight:1000; color:#2b303a; box-shadow:0 10px 0 rgba(0,0,0,.07);
+}
+.btn-peach{ background:var(--peach) } .btn-mint{ background:var(--mint) } .btn-sage{ background:var(--sage) } .btn-coral{ background:var(--coral) }
+.menu [data-icon]::before{
+  content:attr(data-icon);
+  font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",emoji;
+  font-size:1.1em; display:inline-grid; place-items:center;
+  width:56px; height:56px; border-radius:999px; background:rgba(255,255,255,.45);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
+}
+.menu form{ margin:0 }

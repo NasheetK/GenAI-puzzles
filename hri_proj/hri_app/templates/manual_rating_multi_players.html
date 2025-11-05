@@ -1,234 +1,220 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Player Rating Table</title>
+
+  <!-- Shared Montessori theme -->
+  <link rel="stylesheet" href="{% static 'css/playful_montessori.css' %}">
+  <link rel="stylesheet" href="{% static 'css/home_menu_montessori.css' %}">
+
+  <!-- Minimal extra styles JUST for the emoji radios (not covered by your theme) -->
   <style>
-    :root{--size:28px}
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;margin:20px}
-    table{border-collapse:collapse;width:100%;max-width:900px;margin:0 auto}
-    th,td{border:1px solid #ddd;padding:8px;text-align:center;vertical-align:middle}
-    th{background:#f7f7f7}
-    .name-cell{text-align:left;padding-left:12px;font-weight:600}
-    .rating{display:flex;gap:6px;justify-content:center;align-items:center}
-    .rating input{display:none}
-    .emoji-label{
-      display:inline-grid;
-      place-items:center;
-      width:var(--size);height:var(--size);
-      font-size:18px;line-height:1;
-      border-radius:6px;cursor:pointer;user-select:none;
-      transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
+    :root { --size: 28px; }
+    .rating-table-wrapper { max-width: 980px; margin: 0 auto; }
+    .rating-table { width: 100%; border-collapse: collapse; }
+    .rating-table th, .rating-table td {
+      border: 1px solid #e5e7eb; padding: 8px; text-align: center; vertical-align: middle;
     }
-    .emoji-label:hover{transform:translateY(-3px)}
-    input:checked + .emoji-label{background:#ffd966;box-shadow:0 0 6px rgba(0,0,0,.3);transform:translateY(-6px) scale(1.06)}
-    .emoji-label span{font-size:20px}
-    caption{caption-side:top;text-align:left;font-weight:700;margin-bottom:8px}
-    @media (max-width:520px){:root{--size:24px}.emoji-label span{font-size:18px}}
-    button{
-      margin:20px auto;display:block;padding:10px 20px;font-size:16px;
-      border:none;border-radius:8px;background:#007bff;color:#fff;cursor:pointer;
+    .rating-table th { background: #f7f7f7; }
+    .name-cell { text-align: left; padding-left: 12px; font-weight: 700; }
+
+    .rating { display: inline-flex; gap: 6px; align-items: center; }
+    .rating input { display: none; }
+    .emoji-label {
+      display: inline-grid; place-items: center;
+      width: var(--size); height: var(--size);
+      font-size: 18px; line-height: 1; border-radius: 8px; cursor: pointer; user-select: none;
+      background: #fff; border: 1px solid #e5e7eb;
     }
-    button:hover{background:#0056b3}
+    /* touch-friendly: no hover/animation; simple checked highlight */
+    input:checked + .emoji-label {
+      background: #ffd966; border-color: #eab308;
+      box-shadow: 0 0 0 3px rgba(250,204,21,0.3);
+    }
+    .emoji-label span { font-size: 20px; }
+    @media (max-width:520px){ :root{ --size:24px } .emoji-label span{ font-size:18px } }
+
+    /* Space forms a bit without altering your theme */
+    .action-forms { display: grid; gap: 10px; max-width: 320px; margin: 16px auto 0; }
   </style>
 </head>
-<body>
-    <div>Rate Yourself</div>
-    <table id="rating-table" aria-describedby="table-desc">
+<body class="montessori-bg">
+   <main class="center-screen">
+  <div class="montessori-card stack-buttons">
+    <h1 class="montessori-heading" style="text-align:center;">Rate Yourself</h1>
+
+    <div class="rating-table-wrapper">
+      <table id="rating-table" class="rating-table" aria-describedby="table-desc">
         <thead>
-            <tr id="header-row"></tr>
+          <tr id="header-row"></tr>
         </thead>
         <tbody id="tbody"></tbody>
-    </table>
-    <form id="ai_rating" method="POST" action="{% url 'ai_rating' %}">
-        <button type="submit">View AI Rating</button>
-    </form>
-    <form id="view_history" method="POST" action="{% url 'view_history' %}">
-        <button type="submit">View History</button>
-    </form>
-    <form id="new_puzzle" method="POST" action="{% url 'new_puzzle' %}">
-        <button type="submit">Next Puzzle Task</button>
-    </form>
+      </table>
+    </div>
+  
 
-    <form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
-        <button type="submit">Exit</button>
-    </form>
+    <div class="action-forms">
+      <form id="ai_rating" method="POST" action="{% url 'ai_rating' %}">
+        <button type="submit" class="montessori-btn montessori-btn-purple" style="display:none;">View AI Rating</button>
+      </form>
+
+      <form id="view_history" method="POST" action="{% url 'view_history' %}">
+        <button type="submit" class="montessori-btn montessori-btn-blue">View History</button>
+      </form>
+
+      <form id="new_puzzle" method="POST" action="{% url 'new_puzzle' %}">
+        <button type="submit" class="montessori-btn montessori-btn-green">Next Puzzle Task</button>
+      </form>
+
+      <form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
+        <button type="submit" class="montessori-btn montessori-btn-red">Exit</button>
+      </form>
+    </div>
+  </div>
+</main>
 
   <script>
+
+    window.addEventListener("DOMContentLoaded", () => {
+      try {
+        const message = "How do you think you did? How do you feel about the puzzles?";
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.lang = "en-US";
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        speechSynthesis.speak(utterance);
+      } catch(_) {}
+    });
+
     const players = {{ players|safe }};
     const tasks = ['Satisfy with what you did?','How you feel about the tasks?'];
     const emojis = ['😡','😕','😐','🙂','😄'];
-    const emojiAlt = ['very unhappy','unhappy','middle','happy','very happy'];
+    const emojiAlt = ['very unhappy','unhappy','neutral','happy','very happy'];
 
     const header_row = document.getElementById('header-row');
     const tbody = document.getElementById('tbody');
 
     function buildHeader(){
-        header_row.innerHTML = '';
-        const thName = document.createElement('th');
-        thName.textContent = 'name';
-        header_row.appendChild(thName);
-        for(const t of tasks){
-            const th = document.createElement('th');
-            th.textContent = t;
-            header_row.appendChild(th);
-        }
+      header_row.innerHTML = '';
+      const thName = document.createElement('th');
+      thName.textContent = 'name';
+      header_row.appendChild(thName);
+      for(const t of tasks){
+        const th = document.createElement('th');
+        th.textContent = t;
+        header_row.appendChild(th);
+      }
     }
 
     function buildRows(){
-        tbody.innerHTML = '';
-        players.forEach((p, rowIdx)=>{
-            const tr = document.createElement('tr');
-            const tdName = document.createElement('td');
-            tdName.className = 'name-cell';
-            tdName.textContent = p;
-            tr.appendChild(tdName);
+      tbody.innerHTML = '';
+      players.forEach((p, rowIdx)=>{
+        const tr = document.createElement('tr');
 
-            tasks.forEach((task, taskIdx)=>{
-                const td = document.createElement('td');
-                const groupName = `r_${rowIdx}_${taskIdx}`;
-                const wrapper = document.createElement('div');
-                wrapper.className = 'rating';
-                emojis.forEach((emo, i)=>{
-                    const input = document.createElement('input');
-                    input.type = 'radio';
-                    input.name = groupName;
-                    input.id = `${groupName}_v${i}`;
-                    input.value = String(i+1);
+        const tdName = document.createElement('td');
+        tdName.className = 'name-cell';
+        tdName.textContent = p;
+        tr.appendChild(tdName);
 
-                    const label = document.createElement('label');
-                    label.htmlFor = input.id;
-                    label.className = 'emoji-label';
-                    label.setAttribute('aria-label', emojiAlt[i]);
+        tasks.forEach((task, taskIdx)=>{
+          const td = document.createElement('td');
+          const groupName = `r_${rowIdx}_${taskIdx}`;
+          const wrapper = document.createElement('div');
+          wrapper.className = 'rating';
 
-                    const span = document.createElement('span');
-                    span.textContent = emo;
-                    label.appendChild(span);
+          emojis.forEach((emo, i)=>{
+            const input = document.createElement('input');
+            input.type = 'radio';
+            input.name = groupName;
+            input.id = `${groupName}_v${i}`;
+            input.value = String(i+1);
 
-                    wrapper.appendChild(input);
-                    wrapper.appendChild(label);
-                });
-                td.appendChild(wrapper);
-                tr.appendChild(td);
-            });
-            tbody.appendChild(tr);
+            const label = document.createElement('label');
+            label.htmlFor = input.id;
+            label.className = 'emoji-label';
+            label.setAttribute('aria-label', emojiAlt[i]);
+
+            const span = document.createElement('span');
+            span.textContent = emo;
+            label.appendChild(span);
+
+            wrapper.appendChild(input);
+            wrapper.appendChild(label);
+          });
+
+          td.appendChild(wrapper);
+          tr.appendChild(td);
         });
-    }
 
-    function checkNull(name) {
-        const el = document.querySelector(`input[name="${name}"]:checked`);
-        return el ? el.value : null;
+        tbody.appendChild(tr);
+      });
     }
 
     function gatherRatings(){
-        const results = [];
-        players.forEach((p, rowIdx)=>{
-            const rowRes = { name: p, ratings: [] };
-            tasks.forEach((t, taskIdx)=>{
-                const group = `r_${rowIdx}_${taskIdx}`;
-                const checked = document.querySelector(`input[name="${group}"]:checked`);
-                rowRes.ratings.push(checked ? Number(checked.value) : null);
-            });
-            results.push(rowRes);
+      const results = [];
+      players.forEach((p, rowIdx)=>{
+        const rowRes = { name: p, ratings: [] };
+        tasks.forEach((t, taskIdx)=>{
+          const group = `r_${rowIdx}_${taskIdx}`;
+          const checked = document.querySelector(`input[name="${group}"]:checked`);
+          rowRes.ratings.push(checked ? Number(checked.value) : null);
         });
-        return results;
+        results.push(rowRes);
+      });
+      return results;
     }
 
     function allSelected(){
-        return !gatherRatings().some(r => r.ratings.includes(null));
+      return !gatherRatings().some(r => r.ratings.includes(null));
     }
 
     document.getElementById('ai_rating').addEventListener('submit', function(e) {
-        e.preventDefault(); // stop normal form submission
-
-        if (!allSelected()) {
-            alert('Please finish the rating!');
-            return;
-        }
-
-        const data = gatherRatings();
-
-        fetch("{% url 'submit_ratings' %}", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        })
-        .then(res => {
-            if (!res.ok) {
-                alert('Error occurs while submitting ratings!');
-                return;
-            }
-            // Ratings submitted successfully, now navigate to ai_rating
-            window.location.href = "{% url 'ai_rating' %}";
-        })
-        .catch(err => {
-            console.error(err);
-            alert('Error occurs while submitting ratings!');
-        });
+      e.preventDefault();
+      if (!allSelected()) { alert('Please finish the rating!'); return; }
+      const data = gatherRatings();
+      fetch("{% url 'submit_ratings' %}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }).then(res => {
+        if (!res.ok) { alert('Error occurs while submitting ratings!'); return; }
+        window.location.href = "{% url 'ai_rating' %}";
+      }).catch(()=> alert('Error occurs while submitting ratings!'));
     });
 
     document.getElementById('view_history').addEventListener('submit', function(e) {
-        e.preventDefault(); // stop normal form submission
-
-        if (!allSelected()) {
-            alert('Please finish the rating!');
-            return;
-        }
-
-        const data = gatherRatings();
-
-        fetch("{% url 'submit_ratings' %}", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        })
-        .then(res => {
-            if (!res.ok) {
-                alert('Error occurs while submitting ratings!');
-                return;
-            }
-            // Ratings submitted successfully, now navigate to ai_rating
-            window.location.href = "{% url 'view_history' %}";
-        })
-        .catch(err => {
-            console.error(err);
-            alert('Error occurs while submitting ratings!');
-        });
+      e.preventDefault();
+      if (!allSelected()) { alert('Please finish the rating!'); return; }
+      const data = gatherRatings();
+      fetch("{% url 'submit_ratings' %}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }).then(res => {
+        if (!res.ok) { alert('Error occurs while submitting ratings!'); return; }
+        window.location.href = "{% url 'view_history' %}";
+      }).catch(()=> alert('Error occurs while submitting ratings!'));
     });
 
     document.getElementById('new_puzzle').addEventListener('submit', function(e) {
-        e.preventDefault(); // stop normal form submission
-
-        if (!allSelected()) {
-            alert('Please finish the rating!');
-            return;
-        }
-
-        const data = gatherRatings();
-
-        fetch("{% url 'submit_ratings' %}", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        })
-        .then(res => {
-            if (!res.ok) {
-                alert('Error occurs while submitting ratings!');
-                return;
-            }
-            // Ratings submitted successfully, now navigate to ai_rating
-            window.location.href = "{% url 'new_puzzle' %}";
-        })
-        .catch(err => {
-            console.error(err);
-            alert('Error occurs while submitting ratings!');
-        });
+      e.preventDefault();
+      if (!allSelected()) { alert('Please finish the rating!'); return; }
+      const data = gatherRatings();
+      fetch("{% url 'submit_ratings' %}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }).then(res => {
+        if (!res.ok) { alert('Error occurs while submitting ratings!'); return; }
+        window.location.href = "{% url 'new_puzzle' %}";
+      }).catch(()=> alert('Error occurs while submitting ratings!'));
     });
 
     buildHeader();
     buildRows();
-
   </script>
 </body>
 </html>
