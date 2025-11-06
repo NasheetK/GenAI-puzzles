@@ -207,11 +207,13 @@
     });
 
   const players = {{ players|safe }};
+  let tmp_player_name = players[0];
   let current_item=null, placeholder=null, offsetX=0, offsetY=0;
   let full_info_list=[], puzzle_count=0;
   let completed_p1=[], completed_p2=[];
   const timer_full_puzzle=document.getElementById("timer");
-  let remaining_seconds=60;
+  const start_minutes = 3;
+  let remaining_seconds = start_minutes * 60;
   let timer_interval=null;
   const next_url = "{% url 'get_scoring_board' %}";
 
@@ -251,6 +253,10 @@
         const player = btn.dataset.player;
         const index = parseInt(btn.dataset.index);
         showTab(player, index);
+        // send_record_to_log(player, "start", index);
+        tmp_player_name = (player === "p1") ? players[0] : players[1];
+        console.log("Tab click player:", tmp_player_name);
+        send_record_to_log(tmp_player_name, "start", index);
       });
     });
 
@@ -265,8 +271,8 @@
     if(remaining_seconds<=0){
       clearInterval(timer_interval);
       alert("Time up!");
-      send_record_to_log(players[0], "terminated", current_tab);
-      send_record_to_log(players[1], "terminated", current_tab);
+      send_record_to_log(players[0], "terminated", -1);
+      send_record_to_log(players[1], "terminated", -1);
       window.location.href = next_url;
       return;
     }
@@ -284,6 +290,53 @@
     const tab=document.getElementById(`${playerPrefix}_tab${index}`);
     if(tab) tab.style.display="block";
     document.querySelectorAll(`#tabs_${playerPrefix} .tablinks`)[index]?.classList.add("active");
+  }
+
+  function checkTabComplete(prefix, tab_id){
+    const pieces = document.querySelectorAll(`.piece[id^="${prefix}_"][data-tab="${tab_id}"]`);
+    return Array.from(pieces).every(p => p.classList.contains("locked"));
+  }
+
+  function checkPuzzleComplete(prefix, tab_id){
+
+    // mark completed memory list
+    if(prefix === "p1") completed_p1[tab_id] = true;
+    else completed_p2[tab_id] = true;
+
+    // check if THIS tab truly completed
+    if(!checkTabComplete(prefix, tab_id)) return;
+    tmp_player_name = (prefix === "p1") ? players[0] : players[1];
+    console.log(tmp_player_name)
+    send_record_to_log(tmp_player_name, "completed", tab_id);
+
+    // ======= NEW ADD THIS =======
+    // check both players fully done
+    if( completed_p1.every(v=>v===true) && completed_p2.every(v=>v===true) ){
+        // BOTH DONE => go next
+        window.location.href = next_url;
+        return;
+    }
+    // =============================
+
+    // find next uncompleted tab of *this* player
+    const completed = (prefix==="p1") ? completed_p1 : completed_p2;
+    let next = completed.findIndex(c=>c===false);
+
+    // this player done but not both done: just wait
+    if(next === -1){
+      // nothing to do for this player
+      return;
+    }
+
+    // auto jump for this player
+    showTab(prefix, next);
+    tmp_player_name = (prefix === "p1") ? players[0] : players[1];
+    console.log(tmp_player_name)
+    send_record_to_log(tmp_player_name, "start", next);
+
+    const tabs = document.querySelectorAll(`#tabs_${prefix} .tablinks`);
+    tabs.forEach(b=>b.classList.remove("active"));
+    tabs[next]?.classList.add("active");
   }
 
   function puzzle_solving(prefix){
@@ -356,6 +409,9 @@
         current_item.style.zIndex=2;
         current_item.classList.add("locked");
         dropzone.appendChild(current_item);
+
+        checkPuzzleComplete(prefix, tab_id);
+
       } else { resetPiece(); }
     }catch(err){ console.error(err); resetPiece(); }
 

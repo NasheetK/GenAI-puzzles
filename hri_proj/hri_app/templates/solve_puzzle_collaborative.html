@@ -301,11 +301,12 @@
 
   // Switch tab
   async function showTab(index) {
-    if (index > 0 && !completed[index - 1]) {
-      // alert(`Please complete Puzzle ${index} first!`);
-      // return;
-      send_record_to_log("pause", index - 1);
-    }
+    // no need for pause
+    // if (index > 0 && !completed[index - 1]) {
+    //   // alert(`Please complete Puzzle ${index} first!`);
+    //   // return;
+    //   send_record_to_log("pause", index - 1);
+    // }
 
     current_tab = index;
     const tabs = document.querySelectorAll(".tabcontent");
@@ -600,7 +601,7 @@
     if (remaining_seconds <= 0) {
       clearInterval(timer_interval);
       alert("Timeout!");
-      send_record_to_log("terminated", current_tab);
+      send_record_to_log("terminated", -1);
       window.location.href = next_url;
       return;
     }

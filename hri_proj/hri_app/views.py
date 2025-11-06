@@ -642,7 +642,10 @@ def submit_personal_record_general(request):
                 elif record['action'] == 'piece_wrong':
                     wrong_piece_amount += 1
 
-        accuracy = correct_piece_amount / (correct_piece_amount + wrong_piece_amount) * 100
+        if (correct_piece_amount + wrong_piece_amount) == 0:
+            accuracy = 0
+        else:
+            accuracy = correct_piece_amount / (correct_piece_amount + wrong_piece_amount) * 100
 
         PersonalRecordGeneral.objects.create(
             name=name,
