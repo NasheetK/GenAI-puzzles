@@ -202,6 +202,9 @@
         speechSynthesis.speak(utterance);
       } catch(_) {}
     });
+  window.addEventListener("beforeunload", () => {
+      speechSynthesis.cancel();
+    });
 
   const players = {{ players|safe }};
   let current_item=null, placeholder=null, offsetX=0, offsetY=0;

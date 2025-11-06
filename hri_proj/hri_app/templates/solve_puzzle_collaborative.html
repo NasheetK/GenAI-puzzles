@@ -205,15 +205,23 @@
         speechSynthesis.speak(utterance);
       } catch(_) {}
     });
+  window.addEventListener("beforeunload", () => {
+      speechSynthesis.cancel();
+    });
 
   // setTimeout(() => {
   //     console.log("5 seconds passed — continue now!");
   //   }, 5000);
 
   let full_info_list = [];
+
+  const with_ai = {{ with_ai|yesno:"true,false" }};
   const players = {{ players|safe }};
   console.log({players});
-  players.push("AI player");
+  if (with_ai) {
+    players.push("AI player");
+  }
+  const player_amount = players.length;
   console.log({players});
   let current_player_idx = 0;
   let puzzle_count = 0;
@@ -268,13 +276,14 @@
     if (players.length > 0 && player_name) {
       player_name.textContent = `Current Player: ${players[current_player_idx]}`;
     }
-
-    const message = "Current Player is " + players[current_player_idx];
-    const utterance = new SpeechSynthesisUtterance(message);
-    utterance.lang = "en-US";
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-    speechSynthesis.speak(utterance);
+    if (players.length > 1 && player_name) {
+      const message = "Current Player is " + players[current_player_idx];
+      const utterance = new SpeechSynthesisUtterance(message);
+      utterance.lang = "en-US";
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      speechSynthesis.speak(utterance);
+    }
 
     console.log(`Current player ${players[current_player_idx]}`);
     if (players[current_player_idx] === "AI player") {

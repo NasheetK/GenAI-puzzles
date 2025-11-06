@@ -46,6 +46,9 @@
         } catch(_) {}
       }
     });
+    window.addEventListener("beforeunload", () => {
+      speechSynthesis.cancel();
+    });
   </script>
 </body>
 </html>

@@ -34,6 +34,10 @@ def clear_and_exit(request):
     return render(request, 'home_page.html')
 
 
+def select_players(request):
+    return render(request, 'select_players.html')
+
+
 def mode_seletion(request):
     return render(request, 'mode_selection.html')
 
@@ -81,10 +85,20 @@ def puzzle_settings(request):
         difficulty = request.POST.get('difficulty')
         character = request.POST.get('character')
         activity = request.POST.get('activity')
+        with_ai = request.POST.get('with_ai')
 
-        request.session['difficulty'] = request.POST.get('difficulty')
-        request.session['character'] = request.POST.get('character')
-        request.session['activity'] = request.POST.get('activity')
+        if with_ai == 'on' and mode == 'collaborative':
+            with_ai = True
+        else:
+            with_ai = False
+
+        print('mode', mode)
+        print('with_ai', with_ai)
+
+        request.session['difficulty'] = difficulty
+        request.session['character'] = character
+        request.session['activity'] = activity
+        request.session['with_ai'] = with_ai
 
         # print(players)
         puzzle_config = {
@@ -92,7 +106,8 @@ def puzzle_settings(request):
             'character': character,
             'activity': activity,
             'players': players,
-            'mode': mode
+            'mode': mode,
+            'with_ai': with_ai
         }
         # print(puzzle_config)
         full_img_list, full_id_list, piece_detail_list = create_puzzle(puzzle_config)
@@ -118,7 +133,8 @@ def puzzle_settings(request):
     return render(request, 'puzzle_settings.html', {
         'difficulties': difficulties,
         'characters': characters,
-        'activities': activities
+        'activities': activities,
+        'mode': mode
         # 'bg_colors': bg_colors
     })
 
@@ -127,6 +143,7 @@ def puzzle_settings(request):
 def instruction(request):
     players = request.session.get('players', [])
     mode = request.session.get('mode', 'collaborative')
+    with_ai = request.session.get('with_ai', None)
     full_img_list = request.session.get('full_img_list', [])
     count = len(full_img_list)
 
@@ -134,8 +151,10 @@ def instruction(request):
     for name in players:
         message += ' ' + name
     message += ', \n'
-    info = "You will be solving " + str(count) + " puzzles in " + mode + ' mode in 5 minutes.'
+    info = "You will be solving " + str(count) + " puzzles in " + mode + ' mode in 5 minutes. '
     message += info
+    if with_ai:
+        message += 'And an AI player will collaborate with you by taking turns.'
 
     if request.method == "POST":
         if mode == 'competitive':
@@ -156,6 +175,9 @@ def solve_collab(request):
     difficulty = request.session.get('difficulty')
     character = request.session.get('character')
     activity = request.session.get('activity')
+    with_ai = request.session.get('with_ai')
+
+    print('with_ai solve collab', with_ai)
 
     puzzle_config = {
         'difficulty': difficulty,
@@ -164,7 +186,7 @@ def solve_collab(request):
         'players': players,
         'mode': mode
     }
-
+    print(puzzle_config)
     if request.method == "POST":
 
         piece_full_id = request.POST.get("piece_id")
@@ -238,7 +260,7 @@ def solve_collab(request):
         # print(len(full_info_list))
 
     return render(request, "solve_puzzle_collaborative.html",
-                  {'puzzle_config': puzzle_config, 'players': players})
+                  {'puzzle_config': puzzle_config, 'players': players, 'with_ai': with_ai})
 
 
 @csrf_exempt

@@ -42,6 +42,17 @@
           <option value="{{ ac }}">{{ ac }}</option>
         {% endfor %}
       </select><br>
+      {% if mode == 'collaborative' %}
+        <input
+          type="checkbox"
+          id="useAiCheckbox"
+          name="with_ai"
+          aria-checked="true"
+        />
+        <label for="useAiCheckbox">
+          Involve AI player
+        </label><br>
+      {% endif %}
 
       <button type="submit" class="montessori-btn montessori-btn-green">Create Puzzle</button>
     </form>
@@ -68,6 +79,9 @@
         speechSynthesis.speak(utterance);
       } catch(_) {}
   });
+  window.addEventListener("beforeunload", () => {
+      speechSynthesis.cancel();
+    });
 </script>
 
 </html>

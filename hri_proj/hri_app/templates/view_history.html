@@ -75,6 +75,9 @@
         speechSynthesis.speak(utterance);
       } catch(_) {}
     });
+    window.addEventListener("beforeunload", () => {
+      speechSynthesis.cancel();
+    });
 
     const player_records = JSON.parse('{{ player_records|escapejs }}');
     const player_select = document.getElementById('player_select');

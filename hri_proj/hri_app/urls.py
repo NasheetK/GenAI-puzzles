@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     path('', views.home, name='home'),
     path('exit/', views.clear_and_exit, name='clear_and_exit'),
+    path('select_players', views.select_players, name='select_players'),
     path('mode_selection/', views.mode_seletion, name='mode_selection'),
     path('form_team_compete/', views.form_team_compete, name='form_team_compete'),
     path('form_team_collab_multi/', views.form_team_collaborative_multi, name='form_team_collaborative_multi'),

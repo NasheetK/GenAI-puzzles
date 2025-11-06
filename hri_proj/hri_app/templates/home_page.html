@@ -20,32 +20,12 @@
   <div class="montessori-card stack-buttons">
     <h1 class="montessori-heading">Puzzle Game</h1>
 
-    <form action="{% url 'form_team_collaborative_single' %}">
-      <button type="submit" class="montessori-btn montessori-btn-green">Single Player</button>
+    <form action="{% url 'select_players' %}">
+      <button type="submit" class="montessori-btn montessori-btn-green">Start</button>
     </form>
 
-    <form action="{% url 'mode_selection' %}">
-      <button type="submit" class="montessori-btn montessori-btn-blue">Two Players</button>
-    </form>
-
-    <form action="{% url 'form_team_collaborative_multi' %}">
-      <button type="submit" class="montessori-btn montessori-btn-purple">More Players</button>
-    </form>
   </div>
 </main>
-
-  <script>
-    window.addEventListener("DOMContentLoaded", () => {
-      try {
-        const message = "Please select the number of players.";
-        const utterance = new SpeechSynthesisUtterance(message);
-        utterance.lang = "en-US";
-        utterance.rate = 0.9;
-        utterance.pitch = 1;
-        speechSynthesis.speak(utterance);
-      } catch(_) {}
-    });
-  </script>
   
 </body>
 </html>
