@@ -84,6 +84,13 @@
       cursor: grab;
     }
 
+    .piece.highlighted {
+      outline: 8px solid red;       /* thicker, bright border */
+      box-shadow: 0 0 10px 3px red; /* glowing effect around the piece */
+      transition: all 0.2s ease;       /* smooth appearance */
+      z-index: 9999;                   /* ensure it’s on top */
+    }
+
     .piece.locked {
       opacity: 0.7;
       cursor: default;
@@ -132,7 +139,7 @@
     </div>
 
     {% for img, img_id, pieces in puzzle_config.full_info_list %}
-      <div class="tabcontent" 
+      <div class="tabcontent"
       id="tab{{ forloop.counter0 }}"
       style="{% if forloop.first %}display:block{% endif %}">
         <div class="puzzle-wrapper">
@@ -479,11 +486,14 @@
 
   async function AIPiecePlacement(){
     const candidate_pieces = document.querySelectorAll(`#tab${current_tab} .piece:not(.locked)`);
-    current_item = candidate_pieces[0];
+    const ai_piece = candidate_pieces[0];
 
-    console.log(`AI will place piece ${current_item.id}`);
+    ai_piece.classList.add('highlighted');
+    ai_piece.style.zIndex = 9999;
 
-    const piece_pos = current_item.getBoundingClientRect();
+    console.log(`AI will place piece ${ai_piece.id}`);
+
+    const piece_pos = ai_piece.getBoundingClientRect();
     console.log(`AI selected piece position ${piece_pos}`);
     const dropzone = document.getElementById("tab" + current_tab + "_dropzone");
     const dropzone_pos = dropzone.getBoundingClientRect();
@@ -494,7 +504,7 @@
     const drag_pos_data = new FormData();
     drag_pos_data.append("index", current_tab);
     drag_pos_data.append("name", players[current_player_idx]);
-    drag_pos_data.append("piece_id", current_item.id);
+    drag_pos_data.append("piece_id", ai_piece.id);
     drag_pos_data.append("x", piece_pos.left + scrollX);
     drag_pos_data.append("y", piece_pos.top + scrollY);
     drag_pos_data.append("target_left", dropzone_pos.left + scrollX);
@@ -524,48 +534,57 @@
         }
 
         // place inside dropzone at snapped coords
-        current_item.style.position = "absolute";
-        current_item.style.left = dx + "px";
-        current_item.style.top = dy + "px";
-        current_item.style.zIndex = 2;
-        current_item.classList.add("locked");
-        dropzone.appendChild(current_item);
+        ai_piece.style.position = "absolute";
+        ai_piece.style.left = dx + "px";
+        ai_piece.style.top = dy + "px";
+        ai_piece.style.zIndex = 2;
+        ai_piece.classList.add("locked");
+        dropzone.appendChild(ai_piece);
 
         checkPuzzleComplete(current_tab);
 
       } else {
         // revert to original spot
         if (placeholder && placeholder.parentNode) {
-          placeholder.parentNode.replaceChild(current_item, placeholder);
+          placeholder.parentNode.replaceChild(ai_piece, placeholder);
         }
-        current_item.style.position = "";
-        current_item.style.left = "";
-        current_item.style.top = "";
-        current_item.style.width = "";
-        current_item.style.height = "";
-        current_item.style.zIndex = "";
+        ai_piece.style.position = "";
+        ai_piece.style.left = "";
+        ai_piece.style.top = "";
+        ai_piece.style.width = "";
+        ai_piece.style.height = "";
+        ai_piece.style.zIndex = "";
       }
     } catch (error) {
       console.error("Error in piece position verification!", error);
       if (placeholder && placeholder.parentNode) {
-        placeholder.parentNode.replaceChild(current_item, placeholder);
+        placeholder.parentNode.replaceChild(ai_piece, placeholder);
       }
-      current_item.style.position = "";
-      current_item.style.left = "";
-      current_item.style.top = "";
-      current_item.style.width = "";
-      current_item.style.height = "";
-      current_item.style.zIndex = "";
+      ai_piece.style.position = "";
+      ai_piece.style.left = "";
+      ai_piece.style.top = "";
+      ai_piece.style.width = "";
+      ai_piece.style.height = "";
+      ai_piece.style.zIndex = "";
     }
 
-    current_item = null;
-    placeholder = null;
-
+    // current_item = null;
+    // placeholder = null;
+    //
+    // setTimeout(() => {
+    //   current_player_idx = (current_player_idx + 1) % players.length;
+    //   switchToNextPlayer();
+    //   checkPuzzleComplete(current_tab);
+    // }, 1000);
     setTimeout(() => {
+      ai_piece.classList.remove('highlighted');
+      placeholder = null;
+
       current_player_idx = (current_player_idx + 1) % players.length;
       switchToNextPlayer();
       checkPuzzleComplete(current_tab);
-    }, 1000);
+    }, 2000);
+
   }
 
 
