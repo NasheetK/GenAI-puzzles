@@ -36,11 +36,12 @@ class PersonalRecordDetail(models.Model):
     detail_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=20)
     puzzle_id = models.CharField(max_length=50)
+    piece_id = models.CharField(max_length=5)
     action = models.CharField(max_length=50) # start, piece matched, completed, terminated
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.name} - {self.puzzle_id} - {self.action}"
+        return f"{self.name} - {self.puzzle_id} - {self.piece_id} - {self.action}"
 
 
 class PersonalRecordGeneral(models.Model):
@@ -51,12 +52,14 @@ class PersonalRecordGeneral(models.Model):
     difficulty = models.CharField(max_length=20)
     character = models.CharField(max_length=20)
     activity = models.CharField(max_length=20)
+    with_ai = models.BooleanField()
     puzzle_amount = models.IntegerField()
     time_start = models.DateTimeField(auto_now_add=False)
     time_end = models.DateTimeField(auto_now_add=False)
-    self_feeling_score = models.IntegerField(default=0)
-    self_task_score = models.IntegerField(default=0)
-    ai_task_score = models.IntegerField(default=0)
+    solved_puzzle_amount = models.IntegerField()
+    correct_piece_amount = models.IntegerField()
+    wrong_piece_amount = models.IntegerField()
+    accuracy = models.FloatField()
 
     def __str__(self):
         return f"{self.name} - {self.time_start} to {self.time_end} - {self.puzzle_amount} puzzles"

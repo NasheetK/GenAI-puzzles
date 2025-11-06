@@ -242,7 +242,7 @@
 
   // timer state
   const start_minutes = 1;
-  const next_url = "{% url 'manual_rating' %}";
+  const next_url = "{% url 'get_scoring_board' %}";
   let remaining_seconds = start_minutes * 60;
   let timer_full_puzzle = null;
   let timer_interval = null;
@@ -334,7 +334,7 @@
       if (index + 1 < puzzle_count) {
         showTab(index + 1);
       } else {
-        window.location.href = "{% url 'manual_rating' %}";
+        window.location.href = next_url;
       }
     }
   }
@@ -345,7 +345,7 @@
       const record_data = new FormData();
       record_data.append("action", action);
       record_data.append("index", index);
-      await fetch("{% url 'save_personal_record_detail' %}", {
+      await fetch("{% url 'save_personal_record_detail_collab' %}", {
         method: "POST",
         body: record_data,
       });
@@ -586,8 +586,6 @@
     }, 2000);
 
   }
-
-
 
   // ----- Timer -----
   function formatTime(totalSeconds) {

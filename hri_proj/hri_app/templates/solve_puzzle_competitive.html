@@ -213,6 +213,23 @@
   const timer_full_puzzle=document.getElementById("timer");
   let remaining_seconds=60;
   let timer_interval=null;
+  const next_url = "{% url 'get_scoring_board' %}";
+
+  // Log helper
+  async function send_record_to_log(name, action, index) {
+    try {
+      const record_data = new FormData();
+      record_data.append("name", name);
+      record_data.append("action", action);
+      record_data.append("index", index);
+      await fetch("{% url 'save_personal_record_detail_compete' %}", {
+        method: "POST",
+        body: record_data,
+      });
+    } catch (err) {
+      console.error("Error sending record:", err);
+    }
+  }
 
   document.addEventListener("DOMContentLoaded",()=>{
     try { full_info_list=JSON.parse(document.getElementById("puzzle-data").textContent); }
@@ -225,6 +242,8 @@
     timer_interval=setInterval(tick,1000);
     puzzle_solving("p1");
     puzzle_solving("p2");
+    send_record_to_log(players[0], "start", 0);
+    send_record_to_log(players[1], "start", 0);
 
     // attach tab events dynamically
     document.querySelectorAll(".tablinks").forEach(btn=>{
@@ -246,7 +265,9 @@
     if(remaining_seconds<=0){
       clearInterval(timer_interval);
       alert("Time up!");
-      window.location.href="{% url 'manual_rating' %}";
+      send_record_to_log(players[0], "terminated", current_tab);
+      send_record_to_log(players[1], "terminated", current_tab);
+      window.location.href = next_url;
       return;
     }
     remaining_seconds--;

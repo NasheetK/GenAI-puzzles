@@ -22,14 +22,15 @@ class PieceDragLogAdmin(admin.ModelAdmin):
 
 admin.site.register(PersonalRecordDetail)
 class PersonalRecordDetail(admin.ModelAdmin):
-    list_display = ('detail_id', 'name', 'puzzle_id', 'action', 'timestamp')
-    search_fields = ('name', 'puzzle_id')
+    list_display = ('detail_id', 'name', 'puzzle_id', 'piece_id', 'action', 'timestamp')
+    search_fields = ('name', 'puzzle_id', 'action')
 
 
 admin.site.register(PersonalRecordGeneral)
 class PersonalRecordGeneral(admin.ModelAdmin):
     list_display = ('record_id', 'name', 'team_member', 'game_mode',
-                    'difficulty', 'character', 'activity',
+                    'difficulty', 'character', 'activity', 'with_ai',
                     'puzzle_amount', 'time_start', 'time_end',
-                    'self_feeling_score', 'self_task_score', 'ai_task_score')
+                    'solved_puzzle_amount', 'correct_piece_amount',
+                    'wrong_piece_amount', 'accuracy')
     search_fields = ('name', 'puzzle_id')

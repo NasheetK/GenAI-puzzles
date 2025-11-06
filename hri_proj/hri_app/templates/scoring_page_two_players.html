@@ -1,0 +1,139 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Player Rating Table</title>
+
+  <!-- Shared Montessori theme -->
+  <link rel="stylesheet" href="{% static 'css/playful_montessori.css' %}">
+  <link rel="stylesheet" href="{% static 'css/home_menu_montessori.css' %}">
+
+  <!-- Minimal local styles only for the emoji radios and table grid -->
+  <style>
+    :root { --size: 28px; }
+    .rating-table-wrapper { max-width: 980px; margin: 0 auto; }
+    .rating-table { width: 100%; border-collapse: collapse; }
+    .rating-table th, .rating-table td {
+      border: 1px solid #e5e7eb; padding: 8px; text-align: center; vertical-align: middle;
+    }
+    .rating-table th { background: #f7f7f7; }
+    .name-cell { text-align: left; padding-left: 12px; font-weight: 700; }
+
+    .rating { display: inline-flex; gap: 6px; align-items: center; }
+    .rating input { display: none; }
+
+    .emoji-label {
+      display: inline-grid; place-items: center;
+      width: var(--size); height: var(--size);
+      font-size: 18px; line-height: 1;
+      border-radius: 8px; user-select: none; cursor: pointer;
+      background: #fff; border: 1px solid #e5e7eb;
+      /* touch-friendly: no hover/transition */
+    }
+    input:checked + .emoji-label {
+      background: #ffd966; border-color: #eab308;
+      box-shadow: 0 0 0 3px rgba(250,204,21,0.3);
+    }
+    .emoji-label span { font-size: 20px; }
+    @media (max-width:520px){ :root{ --size:24px } .emoji-label span{ font-size:18px } }
+
+    .action-forms { display: grid; gap: 10px; max-width: 340px; margin: 16px auto 0; }
+  </style>
+</head>
+<body class="montessori-bg">
+   <main class="center-screen">
+  <div class="montessori-card stack-buttons">
+    <h1 class="montessori-heading" style="text-align:center;">Task Summary</h1>
+
+    <div class="table-wrap">
+      <table id="record_table" class="hidden">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Game Mode</th>
+            <th>Puzzle Total Amount</th>
+            <th>Puzzle Solved Amount</th>
+            <th>Correct Piece Amount</th>
+            <th>Wrong Piece Amount</th>
+            <th>Accuracy</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+
+    <div class="action-forms">
+
+      <form id="view_history" method="POST" action="{% url 'view_history' %}">
+        {% csrf_token %}
+        <button type="submit" class="montessori-btn montessori-btn-blue">View History</button>
+      </form>
+
+      <form id="change_mode" method="POST" action="{% url 'change_mode' %}">
+        {% csrf_token %}
+        <button type="submit" class="montessori-btn montessori-btn-yellow">Change Mode</button>
+      </form>
+
+      <form id="new_puzzle" method="POST" action="{% url 'new_puzzle' %}">
+        {% csrf_token %}
+        <button type="submit" class="montessori-btn montessori-btn-green">Next Puzzle Task</button>
+      </form>
+
+      <form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
+        <button type="submit" class="montessori-btn montessori-btn-red">Exit</button>
+      </form>
+    </div>
+  </div>
+  </main>
+
+  <script>
+
+
+    // Submit, then navigate to History
+    document.getElementById('view_history').addEventListener('submit', function(e) {
+      e.preventDefault();
+      window.location.href = "{% url 'view_history' %}";
+    });
+
+    // Submit, then ask to change mode
+    document.getElementById('change_mode').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const current_mode = '{{ mode|escapejs }}';
+      let new_mode;
+      if (current_mode === 'collaborative') new_mode = 'competitive';
+      else if (current_mode === 'competitive') new_mode = 'collaborative';
+      else { alert('Unknown mode: ' + current_mode); return; }
+      if (confirm("Confirm to change the mode to " + new_mode + "?")) {
+        window.location.href = "{% url 'change_mode' %}";
+      }
+    });
+
+    // Submit, then start next puzzle
+    document.getElementById('new_puzzle').addEventListener('submit', function(e) {
+      e.preventDefault();
+      window.location.href = "{% url 'new_puzzle' %}";
+    });
+
+    const record_table = document.getElementById('record_table');
+    const tbody = record_table.querySelector('tbody');
+    const records = {{ player_records|safe }};
+    for (const r of records) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${r.name}</td>
+          <td>${r.game_mode}</td>
+          <td>${r.puzzle_amount}</td>
+          <td>${r.solved_puzzle_amount}</td>
+          <td>${r.correct_piece_amount}</td>
+          <td>${r.wrong_piece_amount}</td>
+          <td>${r.accuracy}</td>
+        `;
+        tbody.appendChild(row);
+      }
+
+  </script>
+</body>
+</html>
