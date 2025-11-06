@@ -39,19 +39,19 @@ def create_puzzle(puzzle_config):
     return full_img_list, full_id_list, piece_detail_list
 
 
-def split_to_pieces(img_path, img_id, row=4, col=4, target_size=(256, 256)):
+def split_to_pieces(img_path, img_id, grid=4, target_size=(256, 256)):
     im = Image.open(img_path)
     out_dir = 'hri_app/static/puzzles/' + str(img_id)
     os.makedirs(out_dir, exist_ok=True)
 
     im = im.resize(target_size)
     w, h = im.size
-    piece_w = w // row
-    piece_h = h // col
+    piece_w = w // grid
+    piece_h = h // grid
 
     saved_paths = []
-    for r in range(row):
-        for c in range(col):
+    for r in range(grid):
+        for c in range(grid):
             left = c * piece_w
             upper = r * piece_h
             right = left + piece_w

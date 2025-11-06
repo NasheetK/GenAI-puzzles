@@ -166,7 +166,7 @@ def instruction(request):
 
 
 @csrf_exempt
-def solve_collab(request):
+def solve_collab(request, grid=4):
 
     # print(request.method)
 
@@ -200,11 +200,11 @@ def solve_collab(request):
         print(piece_full_id, target_left, target_top, target_right, target_bottom)
         width = abs(target_right - target_left)
         height = abs(target_bottom - target_top)
-        grid_width = width / 4
-        grid_height = height / 4
+        grid_width = width / grid
+        grid_height = height / grid
         tolerance = min(grid_width, grid_height) * 0.2 # tolerance for slight differences between drop location and target location 
-        target_row = piece_id // 4
-        target_col = np.mod(piece_id, 4)
+        target_row = piece_id // grid
+        target_col = np.mod(piece_id, grid)
         print(target_row, target_col, grid_height, grid_width)
 
         target_x = target_col * grid_width + target_left
@@ -219,7 +219,7 @@ def solve_collab(request):
         col_at_drop = int((cx - target_left) // grid_width)
         row_at_drop = int((cy - target_top) // grid_height)
         # avoid negatives or out-of-range from fast drags
-        in_bounds = (0 <= col_at_drop < 4) and (0 <= row_at_drop < 4)
+        in_bounds = (0 <= col_at_drop < grid) and (0 <= row_at_drop < grid)
         success = in_bounds and (row_at_drop == target_row) and (col_at_drop == target_col)
 
         # check by small tolerance, need higher accuracy than above center-based approach
@@ -266,7 +266,7 @@ def solve_collab(request):
 
 
 @csrf_exempt
-def solve_collab_ai(request):
+def solve_collab_ai(request, grid=4):
     # print(request.method)
 
     if request.method == "POST":
@@ -282,10 +282,10 @@ def solve_collab_ai(request):
         print(piece_full_id, target_left, target_top, target_right, target_bottom)
         width = abs(target_right - target_left)
         height = abs(target_bottom - target_top)
-        grid_width = width / 4
-        grid_height = height / 4
-        target_row = piece_id // 4
-        target_col = np.mod(piece_id, 4)
+        grid_width = width / grid
+        grid_height = height / grid
+        target_row = piece_id // grid
+        target_col = np.mod(piece_id, grid)
         print(target_row, target_col, grid_height, grid_width)
 
         target_x = target_col * grid_width + target_left
@@ -328,7 +328,7 @@ def solve_collab_ai(request):
 
 
 @csrf_exempt
-def solve_compete(request):
+def solve_compete(request, grid=4):
     # print(request.method)
 
     players = request.session.get('players', [])
@@ -359,12 +359,12 @@ def solve_compete(request):
         print(piece_full_id, target_left, target_top, target_right, target_bottom)
         width = abs(target_right - target_left)
         height = abs(target_bottom - target_top)
-        grid_width = width / 4
-        grid_height = height / 4
+        grid_width = width / grid
+        grid_height = height / grid
         tolerance = min(grid_width,
                         grid_height) * 0.2  # tolerance for slight differences between drop location and target location
-        target_row = piece_id // 4
-        target_col = np.mod(piece_id, 4)
+        target_row = piece_id // grid
+        target_col = np.mod(piece_id, grid)
         print(target_row, target_col, grid_height, grid_width)
 
         target_x = target_col * grid_width + target_left
@@ -379,7 +379,7 @@ def solve_compete(request):
         col_at_drop = int((cx - target_left) // grid_width)
         row_at_drop = int((cy - target_top) // grid_height)
         # avoid negatives or out-of-range from fast drags
-        in_bounds = (0 <= col_at_drop < 4) and (0 <= row_at_drop < 4)
+        in_bounds = (0 <= col_at_drop < grid) and (0 <= row_at_drop < grid)
         success = in_bounds and (row_at_drop == target_row) and (col_at_drop == target_col)
 
         # check by small tolerance, need higher accuracy than above center-based approach
