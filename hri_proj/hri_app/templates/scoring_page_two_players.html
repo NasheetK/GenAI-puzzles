@@ -122,6 +122,7 @@
     const tbody = record_table.querySelector('tbody');
     const records = {{ player_records|safe }};
     const mode = "{{ mode }}";
+    let nameCell;
     // for (const r of records) {
     //     const row = document.createElement('tr');
     //     row.innerHTML = `
@@ -141,10 +142,10 @@
         const row = document.createElement('tr');
 
         if (mode === 'competitive') {
-          const nameCell = i === 0 ? `${r.name} 🏆` : r.name;
+          nameCell = i === 0 ? `${r.name} 🏆` : r.name;
         }
         else {
-          const nameCell = i === 0 ? `${r.name}` : r.name;
+          nameCell = i === 0 ? `${r.name}` : r.name;
         }
         row.innerHTML = `
           <td class="name-cell">${nameCell}</td>
