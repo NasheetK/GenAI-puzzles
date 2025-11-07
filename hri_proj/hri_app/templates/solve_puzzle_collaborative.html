@@ -246,6 +246,7 @@
   let remaining_seconds = start_minutes * 60;
   let timer_full_puzzle = null;
   let timer_interval = null;
+  let turn_locked = false;
 
   // Parse JSON and initialize after DOM is ready
   document.addEventListener("DOMContentLoaded", () => {
@@ -279,6 +280,9 @@
   });
 
   function switchToNextPlayer() {
+    // if (turn_locked) return;
+    // // turn_locked = true;
+
     const player_name = document.getElementById("current-player");
     if (players.length > 0 && player_name) {
       player_name.textContent = `Current Player: ${players[current_player_idx]}`;
@@ -294,9 +298,10 @@
 
     console.log(`Current player ${players[current_player_idx]}`);
     if (players[current_player_idx] === "AI player") {
-      setTimeout(AIPiecePlacement, 1000); // 1 second delay for realism
+      // turn_locked = true;
+      setTimeout(AIPiecePlacement, 1000);
     }
-
+    turn_locked = false;
   }
 
   // Switch tab
@@ -401,7 +406,8 @@
   });
 
   document.addEventListener("mouseup", async e => {
-    if (!current_item) return;
+    if (!current_item || turn_locked) return;
+    turn_locked = true;
     current_item.style.cursor = "grab";
 
     const piece_pos = current_item.getBoundingClientRect();
@@ -482,11 +488,20 @@
 
     current_item = null;
     placeholder = null;
+    turn_locked = true;
+    switchToNextPlayer();
   });
 
 
   async function AIPiecePlacement(){
+    if (turn_locked) return;
+    turn_locked = true;
+
     const candidate_pieces = document.querySelectorAll(`#tab${current_tab} .piece:not(.locked)`);
+    if (candidate_pieces.length === 0) {
+      turn_locked = false;
+      return;
+    }
     const ai_piece = candidate_pieces[0];
 
     ai_piece.classList.add('highlighted');
@@ -542,7 +557,7 @@
         ai_piece.classList.add("locked");
         dropzone.appendChild(ai_piece);
 
-        checkPuzzleComplete(current_tab);
+        await checkPuzzleComplete(current_tab);
 
       } else {
         // revert to original spot
@@ -582,9 +597,10 @@
       placeholder = null;
 
       current_player_idx = (current_player_idx + 1) % players.length;
+      turn_locked = false;
       switchToNextPlayer();
       checkPuzzleComplete(current_tab);
-    }, 2000);
+    }, 1000);
 
   }
 

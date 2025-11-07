@@ -507,7 +507,7 @@ def get_records_from_db(name, puzzle_id_list):
         records_all.append(records_refined)
         time_start_str = datetime.fromtimestamp(time_start / 1000).strftime("%Y-%m-%d %H:%M:%S")
         time_end_str = datetime.fromtimestamp(time_end / 1000).strftime("%Y-%m-%d %H:%M:%S")
-    return records_all, time_start_str, time_end_str
+    return records_all, time_start_str, time_end_str, abs(time_end - time_start)
 
 
 def get_manual_ratings_by_name(data, name):
@@ -535,7 +535,7 @@ def submit_ratings(request):
         if mode == 'collaborative':
             full_info_list = request.session.get('full_info_list', [])
             puzzle_id_list = [x[1] for x in full_info_list]
-            related_records, time_start, time_end = get_records_from_db(players[0], puzzle_id_list)
+            related_records, time_start, time_end, time_gap = get_records_from_db(players[0], puzzle_id_list)
             ai_task_score = get_ai_score(len(players), len(puzzle_id_list), related_records)
         for name in players:
             self_feeling_score, self_task_score = get_manual_ratings_by_name(data, name)
@@ -546,7 +546,7 @@ def submit_ratings(request):
             full_info_list = request.session.get('full_info_list', [])
             puzzle_id_list = [x[1] for x in full_info_list]
             if mode == 'competitive':
-                related_records, time_start, time_end = get_records_from_db(name, puzzle_id_list)
+                related_records, time_start, time_end, time_gap = get_records_from_db(name, puzzle_id_list)
                 ai_task_score = get_ai_score(1, len(puzzle_id_list), related_records)
 
             PersonalRecordGeneral.objects.create(
@@ -598,6 +598,23 @@ def get_scoring_board(request):
     mode = request.session.get('mode', 'collaborative')
     player_records = submit_personal_record_general(request)
 
+    player_records = sorted(
+        player_records,
+        key=lambda r: (
+            -r['correct_piece_amount'],  # high to low
+            -r['accuracy'],  # high to low
+            r['time_gap'], # low to high
+        )
+    )
+
+    for record in player_records:
+        record['accuracy'] = "{:.2f}".format(record['accuracy']) + '%'
+        # print(record['time_gap'])
+        seconds = record['time_gap'] // 1000
+        mins = int(seconds // 60)
+        secs = int(seconds % 60)
+        record['time_gap'] = f"{mins:02d}:{secs:02d}"
+
     if len(players) == 2 and 'AI player' not in players:
         return render(request, "scoring_page_two_players.html", {
             'players': players, 'mode': mode, 'player_records': player_records})
@@ -629,7 +646,7 @@ def submit_personal_record_general(request):
         correct_piece_amount = 0
         wrong_piece_amount = 0
 
-        related_records, time_start, time_end = get_records_from_db(name, puzzle_id_list)
+        related_records, time_start, time_end, time_gap = get_records_from_db(name, puzzle_id_list)
         print(related_records)
         # related_records = [[{'detail_id': 1, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '1', 'action': 'piece_matched', 'timestamp': 1762415080363}, {'detail_id': 3, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '11', 'action': 'piece_matched', 'timestamp': 1762415094686}, {'detail_id': 10, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '5', 'action': 'piece_matched', 'timestamp': 1762415105754}, {'detail_id': 12, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '12', 'action': 'piece_matched', 'timestamp': 1762415110098}, {'detail_id': 14, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '8', 'action': 'piece_matched', 'timestamp': 1762415114872}, {'detail_id': 16, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '15', 'action': 'piece_wrong', 'timestamp': 1762415118464}, {'detail_id': 17, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '15', 'action': 'piece_wrong', 'timestamp': 1762415121228}, {'detail_id': 18, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '15', 'action': 'piece_wrong', 'timestamp': 1762415123025}, {'detail_id': 19, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '15', 'action': 'piece_matched', 'timestamp': 1762415124238}, {'detail_id': 21, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '-1', 'action': 'completed', 'timestamp': 1762415125274}], [{'detail_id': 22, 'name': '2', 'puzzle_id': '167256899826066747807738590047242329404', 'piece_id': '-1', 'action': 'start', 'timestamp': 1762415127480}, {'detail_id': 23, 'name': '2', 'puzzle_id': '167256899826066747807738590047242329404', 'piece_id': '13', 'action': 'piece_wrong', 'timestamp': 1762415130507}, {'detail_id': 24, 'name': '2', 'puzzle_id': '167256899826066747807738590047242329404', 'piece_id': '-1', 'action': 'terminated', 'timestamp': 1762415297530}], [], [], [], []]
 
@@ -671,7 +688,8 @@ def submit_personal_record_general(request):
             'solved_puzzle_amount': solved_puzzle_amount,
             'correct_piece_amount': correct_piece_amount,
             'wrong_piece_amount': wrong_piece_amount,
-            'accuracy': "{:.2f}".format(accuracy) + '%'
+            'accuracy': accuracy,
+            'time_gap': time_gap
         })
     return player_records
 

@@ -58,6 +58,7 @@
             <th>Correct Piece Amount</th>
             <th>Wrong Piece Amount</th>
             <th>Accuracy</th>
+            <th>Time Spent</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -120,19 +121,50 @@
     const record_table = document.getElementById('record_table');
     const tbody = record_table.querySelector('tbody');
     const records = {{ player_records|safe }};
-    for (const r of records) {
+    const mode = "{{ mode }}";
+    // for (const r of records) {
+    //     const row = document.createElement('tr');
+    //     row.innerHTML = `
+    //       <td>${r.name}</td>
+    //       <td>${r.game_mode}</td>
+    //       <td>${r.puzzle_amount}</td>
+    //       <td>${r.solved_puzzle_amount}</td>
+    //       <td>${r.correct_piece_amount}</td>
+    //       <td>${r.wrong_piece_amount}</td>
+    //       <td>${r.accuracy}</td>
+    //       <td>${r.time_gap}</td>
+    //     `;
+    //     tbody.appendChild(row);
+    //   }
+    for (let i = 0; i < records.length; i++) {
+        const r = records[i];
         const row = document.createElement('tr');
+
+        if (mode === 'competitive') {
+          const nameCell = i === 0 ? `${r.name} 🏆` : r.name;
+        }
+        else {
+          const nameCell = i === 0 ? `${r.name}` : r.name;
+        }
         row.innerHTML = `
-          <td>${r.name}</td>
+          <td class="name-cell">${nameCell}</td>
           <td>${r.game_mode}</td>
           <td>${r.puzzle_amount}</td>
           <td>${r.solved_puzzle_amount}</td>
           <td>${r.correct_piece_amount}</td>
           <td>${r.wrong_piece_amount}</td>
           <td>${r.accuracy}</td>
+          ${mode === 'competitive' ? `<td>${r.time_gap}</td>` : ''}
         `;
         tbody.appendChild(row);
-      }
+    }
+    if (mode === 'competitive') {
+        const ths = record_table.querySelectorAll('thead th');
+        ths[ths.length - 1].style.display = '';
+    } else {
+        const ths = record_table.querySelectorAll('thead th');
+        ths[ths.length - 1].style.display = 'none';
+    }
 
   </script>
 </body>

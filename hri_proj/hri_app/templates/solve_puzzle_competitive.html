@@ -299,15 +299,16 @@
 
   function checkPuzzleComplete(prefix, tab_id){
 
-    // mark completed memory list
-    if(prefix === "p1") completed_p1[tab_id] = true;
-    else completed_p2[tab_id] = true;
-
     // check if THIS tab truly completed
     if(!checkTabComplete(prefix, tab_id)) return;
+
     tmp_player_name = (prefix === "p1") ? players[0] : players[1];
     console.log(tmp_player_name)
     send_record_to_log(tmp_player_name, "completed", tab_id);
+
+    // // mark completed memory list
+    if(prefix === "p1") completed_p1[tab_id] = true;
+    else completed_p2[tab_id] = true;
 
     // ======= NEW ADD THIS =======
     // check both players fully done
@@ -432,4 +433,3 @@
 </script>
 </body>
 </html>
-
