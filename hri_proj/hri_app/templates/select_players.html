@@ -2,41 +2,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Select Mode — Puzzle Game</title>
+  <meta charset="UTF-8" />
+  <title>Select Players</title>
 
   <!-- Shared Montessori styles -->
   <link rel="stylesheet" href="{% static 'css/playful_montessori.css' %}">
   <link rel="stylesheet" href="{% static 'css/home_menu_montessori.css' %}">
 
-  <!-- (Optional) Fonts if not already imported by your CSS -->
+  <!-- Fonts (okay to keep even if your CSS imports them) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
+
 <body class="montessori-bg">
- <main class="center-screen">
+  <main class="center-screen">
   <div class="montessori-card stack-buttons">
     <h1 class="montessori-heading">Puzzle Game</h1>
 
-    <form action="{% url 'form_team_compete' %}">
-      <button type="submit" class="montessori-btn montessori-btn-blue">Compete Mode</button>
+    <form action="{% url 'form_team_collaborative_single' %}">
+      <button type="submit" class="montessori-btn montessori-btn-green">Single Player</button>
     </form>
 
-    <form action="{% url 'form_team_collaborative_two' %}">
-      <button type="submit" class="montessori-btn montessori-btn-green">Collaborate Mode</button>
+    <form action="{% url 'mode_selection' %}">
+      <button type="submit" class="montessori-btn montessori-btn-blue">Two Players</button>
     </form>
 
-    <form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
-      <button type="submit" class="montessori-btn montessori-btn-red">Exit</button>
+    <form action="{% url 'form_team_collaborative_multi' %}">
+      <button type="submit" class="montessori-btn montessori-btn-purple">More Players</button>
     </form>
   </div>
-  </main>
+</main>
 
   <script>
     window.addEventListener("DOMContentLoaded", () => {
       try {
-        const message = "Please select the game mode.";
+        const message = "Please select the number of players.";
         const utterance = new SpeechSynthesisUtterance(message);
         utterance.lang = "en-US";
         utterance.rate = 0.9;
@@ -44,9 +45,11 @@
         speechSynthesis.speak(utterance);
       } catch(_) {}
     });
+
     window.addEventListener("beforeunload", () => {
       speechSynthesis.cancel();
     });
   </script>
+
 </body>
 </html>

@@ -34,6 +34,10 @@ def clear_and_exit(request):
     return render(request, 'home_page.html')
 
 
+def select_players(request):
+    return render(request, 'select_players.html')
+
+
 def mode_seletion(request):
     return render(request, 'mode_selection.html')
 
@@ -81,10 +85,20 @@ def puzzle_settings(request):
         difficulty = request.POST.get('difficulty')
         character = request.POST.get('character')
         activity = request.POST.get('activity')
+        with_ai = request.POST.get('with_ai')
 
-        request.session['difficulty'] = request.POST.get('difficulty')
-        request.session['character'] = request.POST.get('character')
-        request.session['activity'] = request.POST.get('activity')
+        if with_ai == 'on' and mode == 'collaborative':
+            with_ai = True
+        else:
+            with_ai = False
+
+        print('mode', mode)
+        print('with_ai', with_ai)
+
+        request.session['difficulty'] = difficulty
+        request.session['character'] = character
+        request.session['activity'] = activity
+        request.session['with_ai'] = with_ai
 
         # print(players)
         puzzle_config = {
@@ -92,7 +106,8 @@ def puzzle_settings(request):
             'character': character,
             'activity': activity,
             'players': players,
-            'mode': mode
+            'mode': mode,
+            'with_ai': with_ai
         }
         # print(puzzle_config)
         full_img_list, full_id_list, piece_detail_list = create_puzzle(puzzle_config)
@@ -118,7 +133,8 @@ def puzzle_settings(request):
     return render(request, 'puzzle_settings.html', {
         'difficulties': difficulties,
         'characters': characters,
-        'activities': activities
+        'activities': activities,
+        'mode': mode
         # 'bg_colors': bg_colors
     })
 
@@ -127,6 +143,7 @@ def puzzle_settings(request):
 def instruction(request):
     players = request.session.get('players', [])
     mode = request.session.get('mode', 'collaborative')
+    with_ai = request.session.get('with_ai', None)
     full_img_list = request.session.get('full_img_list', [])
     count = len(full_img_list)
 
@@ -134,8 +151,10 @@ def instruction(request):
     for name in players:
         message += ' ' + name
     message += ', \n'
-    info = "You will be solving " + str(count) + " puzzles in " + mode + ' mode in 5 minutes.'
+    info = "You will be solving " + str(count) + " puzzles in " + mode + ' mode in 5 minutes. '
     message += info
+    if with_ai:
+        message += 'And an AI player will collaborate with you by taking turns.'
 
     if request.method == "POST":
         if mode == 'competitive':
@@ -147,7 +166,7 @@ def instruction(request):
 
 
 @csrf_exempt
-def solve_collab(request):
+def solve_collab(request, grid=4):
 
     # print(request.method)
 
@@ -156,6 +175,9 @@ def solve_collab(request):
     difficulty = request.session.get('difficulty')
     character = request.session.get('character')
     activity = request.session.get('activity')
+    with_ai = request.session.get('with_ai')
+
+    print('with_ai solve collab', with_ai)
 
     puzzle_config = {
         'difficulty': difficulty,
@@ -164,7 +186,7 @@ def solve_collab(request):
         'players': players,
         'mode': mode
     }
-
+    print(puzzle_config)
     if request.method == "POST":
 
         piece_full_id = request.POST.get("piece_id")
@@ -178,11 +200,11 @@ def solve_collab(request):
         print(piece_full_id, target_left, target_top, target_right, target_bottom)
         width = abs(target_right - target_left)
         height = abs(target_bottom - target_top)
-        grid_width = width / 4
-        grid_height = height / 4
+        grid_width = width / grid
+        grid_height = height / grid
         tolerance = min(grid_width, grid_height) * 0.2 # tolerance for slight differences between drop location and target location 
-        target_row = piece_id // 4
-        target_col = np.mod(piece_id, 4)
+        target_row = piece_id // grid
+        target_col = np.mod(piece_id, grid)
         print(target_row, target_col, grid_height, grid_width)
 
         target_x = target_col * grid_width + target_left
@@ -197,7 +219,7 @@ def solve_collab(request):
         col_at_drop = int((cx - target_left) // grid_width)
         row_at_drop = int((cy - target_top) // grid_height)
         # avoid negatives or out-of-range from fast drags
-        in_bounds = (0 <= col_at_drop < 4) and (0 <= row_at_drop < 4)
+        in_bounds = (0 <= col_at_drop < grid) and (0 <= row_at_drop < grid)
         success = in_bounds and (row_at_drop == target_row) and (col_at_drop == target_col)
 
         # check by small tolerance, need higher accuracy than above center-based approach
@@ -207,21 +229,23 @@ def solve_collab(request):
         # record to log and return the verification results
         PieceDragLog.objects.create(piece_id=piece_full_id, x=x, y=y, timestamp=timezone.now(), success=success)
 
-        if success:
-            full_info_list = request.session.get('full_info_list', [])
-            name = request.POST.get("name")
-            # players = ['test_name_1', 'test_name_2']
-            index = int(request.POST.get("index"))
-            action = 'piece_matched'
-            # print(full_info_list)
-            puzzle_id = full_info_list[index][1]  # get puzzle_id
+        full_info_list = request.session.get('full_info_list', [])
+        name = request.POST.get("name")
+        index = int(request.POST.get("index"))
+        puzzle_id = full_info_list[index][1]  # get puzzle_id
 
-            PersonalRecordDetail.objects.create(
-                name=name,
-                puzzle_id=puzzle_id,
-                action=action,
-                timestamp=timezone.now()
-            )
+        if success:
+            action = 'piece_matched'
+        else:
+            action = 'piece_wrong'
+
+        PersonalRecordDetail.objects.create(
+            name=name,
+            puzzle_id=puzzle_id,
+            piece_id=str(piece_id),
+            action=action,
+            timestamp=timezone.now()
+        )
 
         return JsonResponse({
             "success": bool(success),
@@ -238,11 +262,11 @@ def solve_collab(request):
         # print(len(full_info_list))
 
     return render(request, "solve_puzzle_collaborative.html",
-                  {'puzzle_config': puzzle_config, 'players': players})
+                  {'puzzle_config': puzzle_config, 'players': players, 'with_ai': with_ai})
 
 
 @csrf_exempt
-def solve_collab_ai(request):
+def solve_collab_ai(request, grid=4):
     # print(request.method)
 
     if request.method == "POST":
@@ -258,10 +282,10 @@ def solve_collab_ai(request):
         print(piece_full_id, target_left, target_top, target_right, target_bottom)
         width = abs(target_right - target_left)
         height = abs(target_bottom - target_top)
-        grid_width = width / 4
-        grid_height = height / 4
-        target_row = piece_id // 4
-        target_col = np.mod(piece_id, 4)
+        grid_width = width / grid
+        grid_height = height / grid
+        target_row = piece_id // grid
+        target_col = np.mod(piece_id, grid)
         print(target_row, target_col, grid_height, grid_width)
 
         target_x = target_col * grid_width + target_left
@@ -270,20 +294,29 @@ def solve_collab_ai(request):
         # record to log and return the verification results
         PieceDragLog.objects.create(piece_id=piece_full_id, x=x, y=y, timestamp=timezone.now(), success=True)
 
-        if True:
-            full_info_list = request.session.get('full_info_list', [])
-            players = request.session.get('players', [])
-            index = int(request.POST.get("index"))
-            action = 'piece_matched'
-            # print(full_info_list)
-            puzzle_id = full_info_list[index][1]  # get puzzle_id
+        full_info_list = request.session.get('full_info_list', [])
+        index = int(request.POST.get("index"))
+        puzzle_id = full_info_list[index][1]  # get puzzle_id
 
-            PersonalRecordDetail.objects.create(
-                name="AI player",
-                puzzle_id=puzzle_id,
-                action=action,
-                timestamp=timezone.now()
-            )
+        success = True # AI is always True
+        # rand_float = random.random() # AI can have the probability to be wrong
+        # if rand_float < 0.8:
+        #     success = True
+        # else:
+        #     success = False
+
+        if success:
+            action = 'piece_matched'
+        else:
+            action = 'piece_wrong'
+
+        PersonalRecordDetail.objects.create(
+            name="AI player",
+            puzzle_id=puzzle_id,
+            piece_id=str(piece_id),
+            action=action,
+            timestamp=timezone.now()
+        )
 
         return JsonResponse({
             "success": bool(True),
@@ -295,7 +328,7 @@ def solve_collab_ai(request):
 
 
 @csrf_exempt
-def solve_compete(request):
+def solve_compete(request, grid=4):
     # print(request.method)
 
     players = request.session.get('players', [])
@@ -326,12 +359,12 @@ def solve_compete(request):
         print(piece_full_id, target_left, target_top, target_right, target_bottom)
         width = abs(target_right - target_left)
         height = abs(target_bottom - target_top)
-        grid_width = width / 4
-        grid_height = height / 4
+        grid_width = width / grid
+        grid_height = height / grid
         tolerance = min(grid_width,
                         grid_height) * 0.2  # tolerance for slight differences between drop location and target location
-        target_row = piece_id // 4
-        target_col = np.mod(piece_id, 4)
+        target_row = piece_id // grid
+        target_col = np.mod(piece_id, grid)
         print(target_row, target_col, grid_height, grid_width)
 
         target_x = target_col * grid_width + target_left
@@ -346,7 +379,7 @@ def solve_compete(request):
         col_at_drop = int((cx - target_left) // grid_width)
         row_at_drop = int((cy - target_top) // grid_height)
         # avoid negatives or out-of-range from fast drags
-        in_bounds = (0 <= col_at_drop < 4) and (0 <= row_at_drop < 4)
+        in_bounds = (0 <= col_at_drop < grid) and (0 <= row_at_drop < grid)
         success = in_bounds and (row_at_drop == target_row) and (col_at_drop == target_col)
 
         # check by small tolerance, need higher accuracy than above center-based approach
@@ -356,21 +389,23 @@ def solve_compete(request):
         # record to log and return the verification results
         PieceDragLog.objects.create(piece_id=piece_full_id, x=x, y=y, timestamp=timezone.now(), success=success)
 
-        if success:
-            full_info_list = request.session.get('full_info_list', [])
-            name = request.POST.get("name")
-            # players = ['test_name_1', 'test_name_2']
-            index = int(request.POST.get("index"))
-            action = 'piece_matched'
-            # print(full_info_list)
-            puzzle_id = full_info_list[index][1]  # get puzzle_id
+        full_info_list = request.session.get('full_info_list', [])
+        name = request.POST.get("name")
+        index = int(request.POST.get("index"))
+        puzzle_id = full_info_list[index][1]  # get puzzle_id
 
-            PersonalRecordDetail.objects.create(
-                name=name,
-                puzzle_id=puzzle_id,
-                action=action,
-                timestamp=timezone.now()
-            )
+        if success:
+            action = 'piece_matched'
+        else:
+            action = 'piece_wrong'
+
+        PersonalRecordDetail.objects.create(
+            name=name,
+            puzzle_id=puzzle_id,
+            piece_id=str(piece_id),
+            action=action,
+            timestamp=timezone.now()
+        )
 
         return JsonResponse({
             "success": bool(success),
@@ -391,32 +426,47 @@ def solve_compete(request):
 
 
 @csrf_exempt
-def save_personal_record_detail(request):
+def save_personal_record_detail_collab(request):
     if request.method == "POST":
         full_info_list = request.session.get('full_info_list', [])
         players = request.session.get('players', [])
-        # players = ['test_name_1', 'test_name_2']
+        with_ai = request.session.get('with_ai', True)
         index = int(request.POST.get("index"))
         action = request.POST.get("action")
         puzzle_id = full_info_list[index][1] # get puzzle_id
+
+        if with_ai:
+            players.append('AI player')
 
         for name in players:
             PersonalRecordDetail.objects.create(
                 name=name,
                 puzzle_id=puzzle_id,
+                piece_id='-1',
                 action=action,
                 timestamp=timezone.now()
             )
         return JsonResponse({'status': 'ok'})
     return JsonResponse({'status': 'error', 'message': 'invalid method'})
 
-
 @csrf_exempt
-def save_personal_record_general(request):
-    assert NotImplementedError
+def save_personal_record_detail_compete(request):
+    if request.method == "POST":
+        full_info_list = request.session.get('full_info_list', [])
+        name = request.POST.get("name")
+        index = int(request.POST.get("index"))
+        action = request.POST.get("action")
+        puzzle_id = full_info_list[index][1] # get puzzle_id
 
-
-
+        PersonalRecordDetail.objects.create(
+            name=name,
+            puzzle_id=puzzle_id,
+            piece_id='-1',
+            action=action,
+            timestamp=timezone.now()
+        )
+        return JsonResponse({'status': 'ok'})
+    return JsonResponse({'status': 'error', 'message': 'invalid method'})
 
 
 def manual_rating(request):
@@ -450,13 +500,14 @@ def get_records_from_db(name, puzzle_id_list):
                 'detail_id': r.detail_id,
                 'name': r.name,
                 'puzzle_id': r.puzzle_id,
+                'piece_id': r.piece_id,
                 'action': r.action,
                 'timestamp': cur_time  # 13-digit timestamp
             })
         records_all.append(records_refined)
         time_start_str = datetime.fromtimestamp(time_start / 1000).strftime("%Y-%m-%d %H:%M:%S")
         time_end_str = datetime.fromtimestamp(time_end / 1000).strftime("%Y-%m-%d %H:%M:%S")
-    return records_all, time_start_str, time_end_str
+    return records_all, time_start_str, time_end_str, abs(time_end - time_start)
 
 
 def get_manual_ratings_by_name(data, name):
@@ -484,7 +535,7 @@ def submit_ratings(request):
         if mode == 'collaborative':
             full_info_list = request.session.get('full_info_list', [])
             puzzle_id_list = [x[1] for x in full_info_list]
-            related_records, time_start, time_end = get_records_from_db(players[0], puzzle_id_list)
+            related_records, time_start, time_end, time_gap = get_records_from_db(players[0], puzzle_id_list)
             ai_task_score = get_ai_score(len(players), len(puzzle_id_list), related_records)
         for name in players:
             self_feeling_score, self_task_score = get_manual_ratings_by_name(data, name)
@@ -495,7 +546,7 @@ def submit_ratings(request):
             full_info_list = request.session.get('full_info_list', [])
             puzzle_id_list = [x[1] for x in full_info_list]
             if mode == 'competitive':
-                related_records, time_start, time_end = get_records_from_db(name, puzzle_id_list)
+                related_records, time_start, time_end, time_gap = get_records_from_db(name, puzzle_id_list)
                 ai_task_score = get_ai_score(1, len(puzzle_id_list), related_records)
 
             PersonalRecordGeneral.objects.create(
@@ -542,6 +593,108 @@ def ai_rating(request):
 
 
 @csrf_exempt
+def get_scoring_board(request):
+    players = request.session.get('players', [])
+    mode = request.session.get('mode', 'collaborative')
+    player_records = submit_personal_record_general(request)
+
+    player_records = sorted(
+        player_records,
+        key=lambda r: (
+            -r['correct_piece_amount'],  # high to low
+            -r['accuracy'],  # high to low
+            r['time_gap'], # low to high
+        )
+    )
+
+    for record in player_records:
+        record['accuracy'] = "{:.2f}".format(record['accuracy']) + '%'
+        # print(record['time_gap'])
+        seconds = record['time_gap'] // 1000
+        mins = int(seconds // 60)
+        secs = int(seconds % 60)
+        record['time_gap'] = f"{mins:02d}:{secs:02d}"
+
+    if len(players) == 2 and 'AI player' not in players:
+        return render(request, "scoring_page_two_players.html", {
+            'players': players, 'mode': mode, 'player_records': player_records})
+    else:
+        return render(request, "scoring_page_multi_players.html", {
+            'players': players, 'mode': mode, 'player_records': player_records})
+
+
+def submit_personal_record_general(request):
+    players = request.session.get('players', [])
+    team_member = ','.join(players)
+    mode = request.session.get('mode', 'collaborative')
+    difficulty = request.session.get('difficulty', 'Beginner')
+    character = request.session.get('character', 'Tiger')
+    activity = request.session.get('activity', 'School')
+    with_ai = request.session.get('with_ai', True)
+
+    full_info_list = request.session.get('full_info_list', [])
+    puzzle_id_list = [x[1] for x in full_info_list]
+
+    player_records = []
+
+    if with_ai:
+        players.append('AI player')
+
+    for name in players:
+
+        solved_puzzle_amount = 0
+        correct_piece_amount = 0
+        wrong_piece_amount = 0
+
+        related_records, time_start, time_end, time_gap = get_records_from_db(name, puzzle_id_list)
+        print(related_records)
+        # related_records = [[{'detail_id': 1, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '1', 'action': 'piece_matched', 'timestamp': 1762415080363}, {'detail_id': 3, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '11', 'action': 'piece_matched', 'timestamp': 1762415094686}, {'detail_id': 10, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '5', 'action': 'piece_matched', 'timestamp': 1762415105754}, {'detail_id': 12, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '12', 'action': 'piece_matched', 'timestamp': 1762415110098}, {'detail_id': 14, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '8', 'action': 'piece_matched', 'timestamp': 1762415114872}, {'detail_id': 16, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '15', 'action': 'piece_wrong', 'timestamp': 1762415118464}, {'detail_id': 17, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '15', 'action': 'piece_wrong', 'timestamp': 1762415121228}, {'detail_id': 18, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '15', 'action': 'piece_wrong', 'timestamp': 1762415123025}, {'detail_id': 19, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '15', 'action': 'piece_matched', 'timestamp': 1762415124238}, {'detail_id': 21, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '-1', 'action': 'completed', 'timestamp': 1762415125274}], [{'detail_id': 22, 'name': '2', 'puzzle_id': '167256899826066747807738590047242329404', 'piece_id': '-1', 'action': 'start', 'timestamp': 1762415127480}, {'detail_id': 23, 'name': '2', 'puzzle_id': '167256899826066747807738590047242329404', 'piece_id': '13', 'action': 'piece_wrong', 'timestamp': 1762415130507}, {'detail_id': 24, 'name': '2', 'puzzle_id': '167256899826066747807738590047242329404', 'piece_id': '-1', 'action': 'terminated', 'timestamp': 1762415297530}], [], [], [], []]
+
+        for record_list in related_records:
+            for record in record_list:
+                if record['action'] == 'completed':
+                    solved_puzzle_amount += 1
+                elif record['action'] == 'piece_matched':
+                    correct_piece_amount += 1
+                elif record['action'] == 'piece_wrong':
+                    wrong_piece_amount += 1
+
+        if (correct_piece_amount + wrong_piece_amount) == 0:
+            accuracy = 0
+        else:
+            accuracy = correct_piece_amount / (correct_piece_amount + wrong_piece_amount) * 100
+
+        PersonalRecordGeneral.objects.create(
+            name=name,
+            team_member=team_member,
+            game_mode=mode,
+            difficulty=difficulty,
+            character=character,
+            activity=activity,
+            with_ai=with_ai,
+            puzzle_amount=len(puzzle_id_list),
+            time_start=time_start,
+            time_end=time_end,
+            solved_puzzle_amount=solved_puzzle_amount,
+            correct_piece_amount=correct_piece_amount,
+            wrong_piece_amount=wrong_piece_amount,
+            accuracy=accuracy
+        )
+
+        player_records.append({
+            'name': name,
+            'game_mode': mode,
+            'puzzle_amount': len(puzzle_id_list),
+            'solved_puzzle_amount': solved_puzzle_amount,
+            'correct_piece_amount': correct_piece_amount,
+            'wrong_piece_amount': wrong_piece_amount,
+            'accuracy': accuracy,
+            'time_gap': time_gap
+        })
+    return player_records
+
+
+@csrf_exempt
 def view_history(request):
     players = request.session.get('players', [])
     player_records = {}
@@ -557,12 +710,14 @@ def view_history(request):
                 'team_member': r.team_member,
                 'game_mode': r.game_mode,
                 'difficulty': r.difficulty,
+                'with_ai': r.with_ai,
                 'puzzle_amount': r.puzzle_amount,
-                'time_start': r.time_start.strftime("%Y-%m-%d %H:%M:%S"),
-                'time_end': r.time_end.strftime("%Y-%m-%d %H:%M:%S"),
-                'self_feeling_score': r.self_feeling_score,
-                'self_task_score': r.self_task_score,
-                'ai_task_score': r.ai_task_score,
+                'time_start': timezone.localtime(r.time_start).strftime("%Y-%m-%d %H:%M:%S"),
+                'time_end': timezone.localtime(r.time_end).strftime("%Y-%m-%d %H:%M:%S"),
+                'solved_puzzle_amount': r.solved_puzzle_amount,
+                'correct_piece_amount': r.correct_piece_amount,
+                'wrong_piece_amount': r.wrong_piece_amount,
+                'accuracy': "{:.2f}".format(r.accuracy) + '%',
             })
         player_records[name] = records_refined
 

@@ -50,14 +50,18 @@
             <th>Team Member</th>
             <th>Game Mode</th>
             <th>Difficulty</th>
+            <th>With AI</th>
             <th>Puzzle Amount</th>
             <th>Start Time</th>
             <th>End Time</th>
-            <th>Self Feeling Score</th>
-            <th>Self Task Score</th>
+            <th>Puzzle Solved Amount</th>
+            <th>Correct Piece Amount</th>
+            <th>Wrong Piece Amount</th>
+            <th>Accuracy</th>
           </tr>
         </thead>
         <tbody></tbody>
+
       </table>
     </div>
   </div>
@@ -74,6 +78,9 @@
         utterance.pitch = 1;
         speechSynthesis.speak(utterance);
       } catch(_) {}
+    });
+    window.addEventListener("beforeunload", () => {
+      speechSynthesis.cancel();
     });
 
     const player_records = JSON.parse('{{ player_records|escapejs }}');
@@ -98,11 +105,15 @@
           <td>${r.team_member}</td>
           <td>${r.game_mode}</td>
           <td>${r.difficulty}</td>
+          <td>${r.with_ai}</td>
           <td>${r.puzzle_amount}</td>
           <td>${r.time_start}</td>
           <td>${r.time_end}</td>
-          <td>${r.self_feeling_score}</td>
-          <td>${r.self_task_score}</td>
+          <td>${r.solved_puzzle_amount}</td>
+          <td>${r.correct_piece_amount}</td>
+          <td>${r.wrong_piece_amount}</td>
+          <td>${r.accuracy}</td>
+
         `;
         tbody.appendChild(row);
       }

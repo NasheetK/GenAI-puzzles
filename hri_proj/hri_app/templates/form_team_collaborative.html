@@ -60,6 +60,9 @@
         speechSynthesis.speak(utterance);
       } catch(_) {}
     });
+    window.addEventListener("beforeunload", () => {
+      speechSynthesis.cancel();
+    });
 
     const container = document.getElementById("player_container");
     const add_btn = document.getElementById("add_btn");
