@@ -458,6 +458,7 @@
         dropzone.appendChild(current_item);
 
         current_player_idx = (current_player_idx + 1) % players.length;
+        turn_locked = false;
         switchToNextPlayer();
         checkPuzzleComplete(current_tab);
 
@@ -488,8 +489,11 @@
 
     current_item = null;
     placeholder = null;
-    turn_locked = true;
-    switchToNextPlayer();
+    turn_locked = false;
+    // if (players[current_player_idx] !== "AI player") {
+    //   turn_locked = true;
+    //   switchToNextPlayer();
+    // }
   });
 
 
