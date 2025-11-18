@@ -119,6 +119,27 @@
     .game-shell { max-width: 1100px; margin: 0 auto; }
     .game-header { text-align:center; margin: 8px 0; }
     .actions { display:grid; gap:10px; max-width:360px; margin: 12px auto; }
+    .mute-toggle {
+        position: fixed;
+        top: 20px;
+        right: 20px;       /* top-right corner */
+        font-size: 22px;
+        background: #ffffff;
+        border: 2px solid #ccc;
+        border-radius: 50%;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        z-index: 9999;    /* always on top */
+    }
+
+    .mute-toggle:hover {
+        background: #f2f2f2;
+    }
   </style>
 </head>
 <body class="montessori-bg">
@@ -197,7 +218,12 @@
   </div>
 </main>
 
-  {{ puzzle_config.full_info_list|json_script:"puzzle-data" }}
+<!--  {{ puzzle_config.full_info_list|json_script:"puzzle-data" }}-->
+
+   <button id="mute-btn" class="mute-toggle">🔊</button>
+    <audio id="bg-audio"
+         src="{% static 'audio/'|add:audio_puzzle %}"
+         preload="auto" style="display:none"></audio>
 
 <script>
   // ----- Globals -----
@@ -215,6 +241,38 @@
   window.addEventListener("beforeunload", () => {
       speechSynthesis.cancel();
     });
+
+  const audio = document.getElementById("bg-audio");
+    // Key used to store time for audio_puzzle
+    const KEY = "audio_puzzle_time";
+    // --- Restore position when showing page ---
+    function resumeAudio() {
+      const savedTime = localStorage.getItem(KEY);
+      if (savedTime) audio.currentTime = parseFloat(savedTime);
+      audio.play().catch(() => {}); // may fail if browser blocks autoplay
+      updateIcon(); // update mute button icon
+    }
+    window.addEventListener("pageshow", resumeAudio);
+
+    // --- Save position before leaving page ---
+    window.addEventListener("beforeunload", () => {
+      localStorage.setItem(KEY, audio.currentTime.toString());
+    });
+
+    const muteBtn = document.getElementById("mute-btn");
+
+    // Initialize icon based on current mute state
+    function updateIcon() {
+        muteBtn.textContent = audio.muted ? "🔇" : "🔊";
+    }
+
+    muteBtn.addEventListener("click", () => {
+        audio.muted = !audio.muted;
+        updateIcon();
+    });
+
+    // update icon again when audio loads
+    audio.addEventListener("loadeddata", updateIcon);
 
   // setTimeout(() => {
   //     console.log("5 seconds passed — continue now!");
