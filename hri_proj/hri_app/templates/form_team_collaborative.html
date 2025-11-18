@@ -73,7 +73,7 @@
    <button id="mute-btn" class="mute-toggle">🔊</button>
     <audio id="bg-audio"
          src="{% static 'audio/'|add:audio_others %}"
-         preload="auto" style="display:none"></audio>
+         preload="auto" style="display:none" loop></audio>
   </main>
 
   <script>
@@ -165,6 +165,34 @@
       });
       count = rows.length;
     }
+
+    const teamForm = document.getElementById("team_form");
+
+    teamForm.addEventListener("submit", function(e) {
+      const inputs = container.querySelectorAll("input.montessori-input");
+      const names = [];
+      let hasEmpty = false;
+      let hasDuplicate = false;
+
+      inputs.forEach(input => {
+        const val = input.value.trim();
+        if (val === "") hasEmpty = true;
+        if (names.includes(val)) hasDuplicate = true;
+        names.push(val);
+      });
+
+      if (hasEmpty) {
+        alert("Please fill in all player names.");
+        e.preventDefault();
+        return false;
+      }
+
+      if (hasDuplicate) {
+        alert("Player names must be unique.");
+        e.preventDefault();
+        return false;
+      }
+    });
   </script>
 </body>
 </html>
