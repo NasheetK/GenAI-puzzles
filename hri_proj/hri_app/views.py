@@ -110,7 +110,7 @@ def puzzle_settings(request):
             'with_ai': with_ai
         }
         # print(puzzle_config)
-        full_img_list, full_id_list, piece_detail_list = create_puzzle(puzzle_config)
+        full_img_list, full_id_list, piece_detail_list, total_time = create_puzzle(puzzle_config)
 
         # save to database
         for img_path, img_id, pieces in zip(full_img_list, full_id_list, piece_detail_list):
@@ -128,6 +128,7 @@ def puzzle_settings(request):
         request.session['full_img_list'] = full_img_list
         request.session['full_id_list'] = full_id_list
         request.session['piece_detail_list'] = piece_detail_list
+        request.session['total_time'] = total_time
         return redirect('instruction')
 
     return render(request, 'puzzle_settings.html', {
@@ -145,13 +146,14 @@ def instruction(request):
     mode = request.session.get('mode', 'collaborative')
     with_ai = request.session.get('with_ai', None)
     full_img_list = request.session.get('full_img_list', [])
+    total_time = request.session.get('total_time', 1)
     count = len(full_img_list)
 
     message = 'Hi'
     for name in players:
         message += ' ' + name
     message += ', \n'
-    info = "You will be solving " + str(count) + " puzzles in " + mode + ' mode in 5 minutes. '
+    info = "You will be solving " + str(count) + " puzzles in " + mode + ' mode in ' + str(total_time) + ' minutes. '
     message += info
     if with_ai:
         message += 'And an AI player will collaborate with you by taking turns.'
@@ -254,15 +256,18 @@ def solve_collab(request, grid=4):
         })
 
     else:
-        full_img_list, full_id_list, piece_detail_list = create_puzzle(puzzle_config)
+        full_img_list, full_id_list, piece_detail_list, total_time = create_puzzle(puzzle_config)
         full_info_list = list(zip(full_img_list, full_id_list, piece_detail_list))
         request.session['full_info_list'] = full_info_list
         puzzle_config['full_info_list'] = full_info_list
+        request.session['total_time'] = total_time
+        puzzle_config['total_time'] = total_time
         # print(full_info_list)
         # print(len(full_info_list))
 
     return render(request, "solve_puzzle_collaborative.html",
-                  {'puzzle_config': puzzle_config, 'players': players, 'with_ai': with_ai})
+                  {'puzzle_config': puzzle_config, 'players': players,
+                   'with_ai': with_ai, 'total_time': total_time})
 
 
 @csrf_exempt
@@ -414,15 +419,18 @@ def solve_compete(request, grid=4):
         })
 
     else:
-        full_img_list, full_id_list, piece_detail_list = create_puzzle(puzzle_config)
+        full_img_list, full_id_list, piece_detail_list, total_time = create_puzzle(puzzle_config)
         full_info_list = list(zip(full_img_list, full_id_list, piece_detail_list))
         request.session['full_info_list'] = full_info_list
         puzzle_config['full_info_list'] = full_info_list
+        request.session['total_time'] = total_time
+        puzzle_config['total_time'] = total_time
         # print(full_info_list)
         # print(len(full_info_list))
 
     return render(request, "solve_puzzle_competitive.html",
-                  {'puzzle_config': puzzle_config, 'players': players})
+                  {'puzzle_config': puzzle_config, 'players': players,
+                   'total_time': total_time})
 
 
 @csrf_exempt

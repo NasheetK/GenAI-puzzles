@@ -210,7 +210,7 @@
 </div>
 </main>
 
-<!--{{ puzzle_config.full_info_list|json_script:"puzzle-data" }}-->
+{{ puzzle_config.full_info_list|json_script:"puzzle-data" }}
 <button id="mute-btn" class="mute-toggle">🔊</button>
     <audio id="bg-audio"
          src="{% static 'audio/'|add:audio_puzzle %}"
@@ -269,7 +269,7 @@
   let full_info_list=[], puzzle_count=0;
   let completed_p1=[], completed_p2=[];
   const timer_full_puzzle=document.getElementById("timer");
-  const start_minutes = 3;
+  const start_minutes = {{ total_time }};
   let remaining_seconds = start_minutes * 60;
   let timer_interval=null;
   const next_url = "{% url 'get_scoring_board' %}";

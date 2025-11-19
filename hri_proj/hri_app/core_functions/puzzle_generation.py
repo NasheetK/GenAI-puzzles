@@ -17,11 +17,13 @@ def create_puzzle(puzzle_config):
         'Expert': 5
     }
     difficulty_value = difficulty_map.get(puzzle_config['difficulty'], 1) # at least one puzzle
+
     # if mode == 'competitive':
     #     img_amount = int(np.floor(difficulty_value))
     # else:
     #     img_amount = max(int(np.floor(len(players) * difficulty_value / 2)), 1) # at least one puzzle
-    img_amount = 2
+    # img_amount = 2
+    img_amount, total_time = get_amount_and_time(mode, len(players), difficulty_value)
     full_img_list = []
     full_id_list = []
     piece_detail_list = []
@@ -36,7 +38,11 @@ def create_puzzle(puzzle_config):
         full_img_list.append(img_path.replace('hri_app/static/', ''))
         full_id_list.append(img_id)
         piece_detail_list.append(piece_detail_with_id)
-    return full_img_list, full_id_list, piece_detail_list
+    return full_img_list, full_id_list, piece_detail_list, total_time
+
+
+def get_amount_and_time(mode, num_players, difficulty_value):
+    return 2, 1
 
 
 def split_to_pieces(img_path, img_id, grid=4, target_size=(256, 256)):

@@ -218,7 +218,7 @@
   </div>
 </main>
 
-<!--  {{ puzzle_config.full_info_list|json_script:"puzzle-data" }}-->
+  {{ puzzle_config.full_info_list|json_script:"puzzle-data" }}
 
    <button id="mute-btn" class="mute-toggle">🔊</button>
     <audio id="bg-audio"
@@ -299,7 +299,7 @@
   let placeholder = null;
 
   // timer state
-  const start_minutes = 1;
+  const start_minutes = {{ total_time }};
   const next_url = "{% url 'get_scoring_board' %}";
   let remaining_seconds = start_minutes * 60;
   let timer_full_puzzle = null;
@@ -320,6 +320,7 @@
 
     // Set counts/state
     puzzle_count = Array.isArray(full_info_list) ? full_info_list.length : 0;
+    console.log('puzzle_count', puzzle_count)
     completed = Array(puzzle_count).fill(false);
     current_tab = 0;
 
@@ -346,7 +347,8 @@
       player_name.textContent = `Current Player: ${players[current_player_idx]}`;
     }
     if (players.length > 1 && player_name) {
-      const message = "Current Player is " + players[current_player_idx];
+      const message = players[current_player_idx] + "'s turn";
+      // const message = "Current Player is " + players[current_player_idx];
       const utterance = new SpeechSynthesisUtterance(message);
       utterance.lang = "en-US";
       utterance.rate = 0.9;
@@ -394,7 +396,7 @@
       completed[index] = true;
       send_record_to_log("completed", index);
       alert("Puzzle " + (index + 1) + " completed!");
-
+      console.log('index', index + 1)
       if (index + 1 < puzzle_count) {
         showTab(index + 1);
       } else {
