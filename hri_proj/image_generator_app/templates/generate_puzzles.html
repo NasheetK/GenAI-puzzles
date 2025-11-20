@@ -1,0 +1,34 @@
+{% load static %}
+<!doctype html>
+<html>
+<head>
+  <title>Generate Puzzle Images</title>
+  <link rel="stylesheet" href="{% static 'css/playful_montessori.css' %}">
+</head>
+<body class="montessori-bg">
+  <main class="center-screen">
+    <div class="montessori-card centered-card">
+      <h1 class="montessori-heading">Generate Puzzle Images</h1>
+      <form method="post">
+        {% csrf_token %}
+        <div class="form-row">
+          {{ form.character.label_tag }} {{ form.character }}
+        </div>
+        <div class="form-row">
+          {{ form.activity.label_tag }} {{ form.activity }}
+        </div>
+        <button class="montessori-button" type="submit">Generate 5 Images</button>
+      </form>
+
+      {% if image_urls %}
+        <h2>New Images</h2>
+        <div class="image-grid">
+        {% for url in image_urls %}
+          <img src="{{ url }}" alt="Puzzle {{ forloop.counter }}" style="max-width: 200px;">
+        {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  </main>
+</body>
+</html>

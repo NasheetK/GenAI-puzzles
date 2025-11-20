@@ -20,4 +20,5 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('hri_app.urls')),
+    path("ai/", include("image_generator_app.urls", namespace="image_generator_app")),
 ]
