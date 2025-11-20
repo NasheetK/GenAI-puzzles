@@ -61,19 +61,23 @@
   </main>
 
   <script>
-    window.addEventListener("DOMContentLoaded", () => {
-      try {
-        const message = "Please select the game mode.";
-        const utterance = new SpeechSynthesisUtterance(message);
-        utterance.lang = "en-US";
-        utterance.rate = 0.9;
-        utterance.pitch = 1;
-        speechSynthesis.speak(utterance);
-      } catch(_) {}
-    });
-    window.addEventListener("beforeunload", () => {
-      speechSynthesis.cancel();
-    });
+    const ROBOT_ENABLE = {{ robot_enable|yesno:"true,false" }};
+    console.log("Robot enabled?", ROBOT_ENABLE);
+    if (ROBOT_ENABLE === false) {
+        window.addEventListener("DOMContentLoaded", () => {
+            try {
+                const message = "Please select the game mode.";
+                const utterance = new SpeechSynthesisUtterance(message);
+                utterance.lang = "en-US";
+                utterance.rate = 0.9;
+                utterance.pitch = 1;
+                speechSynthesis.speak(utterance);
+            } catch(_) {}
+        });
+        window.addEventListener("beforeunload", () => {
+          speechSynthesis.cancel();
+        });
+    }
 
     const audio = document.getElementById("bg-audio");
     // Key used to store time for audio_others

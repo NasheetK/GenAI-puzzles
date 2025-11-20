@@ -1,7 +1,10 @@
+from django.conf import settings
 
 
-def audio_settings(request):
+def general_settings(request):
     return {
-        "audio_puzzle": "Audio1.mp3",
-        "audio_others": "Audio2.mp3",
+        "audio_puzzle": settings.AUDIO_PUZZLE,
+        "audio_others": settings.AUDIO_OTHERS,
+        "puzzle_pipeline": settings.PUZZLE_PIPELINE,
+        "robot_enable": settings.ROBOT_ENABLE
     }

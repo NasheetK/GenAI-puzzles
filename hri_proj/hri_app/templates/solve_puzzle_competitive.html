@@ -217,7 +217,10 @@
          preload="auto" style="display:none" loop></audio>
 
 <script>
-  window.addEventListener("DOMContentLoaded", () => {
+  const ROBOT_ENABLE = {{ robot_enable|yesno:"true,false" }};
+  console.log("Robot enabled?", ROBOT_ENABLE);
+  if (ROBOT_ENABLE === false) {
+    window.addEventListener("DOMContentLoaded", () => {
       try {
         const message = "Please drag pieces below and drop them following the patterns shown.";
         const utterance = new SpeechSynthesisUtterance(message);
@@ -227,9 +230,11 @@
         speechSynthesis.speak(utterance);
       } catch(_) {}
     });
-  window.addEventListener("beforeunload", () => {
-      speechSynthesis.cancel();
-    });
+
+    window.addEventListener("beforeunload", () => {
+        speechSynthesis.cancel();
+      });
+  }
 
   const audio = document.getElementById("bg-audio");
     // Key used to store time for audio_puzzle
@@ -270,11 +275,44 @@
   let completed_p1=[], completed_p2=[];
   const timer_full_puzzle=document.getElementById("timer");
   const start_minutes = {{ total_time }};
-  let remaining_seconds = start_minutes * 60;
+  let remaining_seconds = Math.round(start_minutes * 60);
   let timer_interval=null;
   const next_url = "{% url 'get_scoring_board' %}";
+  const IDLE_LIMIT = 10; // seconds
+  let idle_timer_p1 = null;
+  let idle_timer_p2 = null;
 
-  // Log helper
+  function startIdleTimer(prefix) {
+    if(prefix === "p1" && idle_timer_p1) clearInterval(idle_timer_p1);
+    if(prefix === "p2" && idle_timer_p2) clearInterval(idle_timer_p2);
+
+    const interval = setInterval(() => {
+      const playerName = prefix === "p1" ? players[0] : players[1];
+
+      // check if the player has any incomplete pieces (not locked)
+      const pieces = document.querySelectorAll(`.piece[id^="${prefix}_"]:not(.locked)`);
+      if(pieces.length > 0) {
+        // speak motivational message
+        const messages = [
+          "Keep going! " + playerName + ". You can do it!",
+          "Don't give up, " + playerName + ". Try again!",
+          "Almost there, " + playerName + ". Keep trying!"
+        ];
+        const message = messages[Math.floor(Math.random() * messages.length)];
+        console.log(`Motivation for ${playerName}: ${message}`);
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.lang = "en-US";
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        speechSynthesis.speak(utterance);
+      }
+
+    }, IDLE_LIMIT * 1000);
+
+    if(prefix === "p1") idle_timer_p1 = interval;
+    else idle_timer_p2 = interval;
+  }
+
   async function send_record_to_log(name, action, index) {
     try {
       const record_data = new FormData();
@@ -299,10 +337,13 @@
 
     tick();
     timer_interval=setInterval(tick,1000);
+
     puzzle_solving("p1");
     puzzle_solving("p2");
     send_record_to_log(players[0], "start", 0);
     send_record_to_log(players[1], "start", 0);
+    startIdleTimer("p1");
+    startIdleTimer("p2");
 
     // attach tab events dynamically
     document.querySelectorAll(".tablinks").forEach(btn=>{
@@ -468,6 +509,13 @@
         current_item.classList.add("locked");
         dropzone.appendChild(current_item);
 
+        if (prefix === "p1") {
+            if (idle_timer_p1) clearInterval(idle_timer_p1);
+            startIdleTimer("p1");
+        } else {
+            if (idle_timer_p2) clearInterval(idle_timer_p2);
+            startIdleTimer("p2");
+        }
         checkPuzzleComplete(prefix, tab_id);
 
       } else { resetPiece(); }

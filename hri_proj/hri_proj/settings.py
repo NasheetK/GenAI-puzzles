@@ -63,7 +63,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'hri_app.context_processors.audio_settings',
+                'hri_app.context_processors.general_settings',
             ],
         },
     },
@@ -125,3 +125,10 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# General settings for the game
+AUDIO_PUZZLE = "Audio1.mp3"
+AUDIO_OTHERS = "Audio2.mp3"
+PUZZLE_PIPELINE = "offline"  # offline or real-time
+ROBOT_ENABLE = False # True or False
+DEMO_ENABLE = True

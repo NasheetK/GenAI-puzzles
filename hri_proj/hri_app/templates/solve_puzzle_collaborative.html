@@ -227,8 +227,10 @@
 
 <script>
   // ----- Globals -----
-
-  window.addEventListener("DOMContentLoaded", () => {
+  const ROBOT_ENABLE = {{ robot_enable|yesno:"true,false" }};
+  console.log("Robot enabled?", ROBOT_ENABLE);
+  if (ROBOT_ENABLE === false) {
+    window.addEventListener("DOMContentLoaded", () => {
       try {
         const message = "Please drag pieces below and drop them following the patterns shown.";
         const utterance = new SpeechSynthesisUtterance(message);
@@ -236,11 +238,14 @@
         utterance.rate = 0.9;
         utterance.pitch = 1;
         speechSynthesis.speak(utterance);
-      } catch(_) {}
+      } catch (_) {
+      }
     });
-  window.addEventListener("beforeunload", () => {
+
+    window.addEventListener("beforeunload", () => {
       speechSynthesis.cancel();
     });
+  }
 
   const audio = document.getElementById("bg-audio");
     // Key used to store time for audio_puzzle
@@ -301,10 +306,34 @@
   // timer state
   const start_minutes = {{ total_time }};
   const next_url = "{% url 'get_scoring_board' %}";
-  let remaining_seconds = start_minutes * 60;
+  let remaining_seconds = Math.round(start_minutes * 60);
   let timer_full_puzzle = null;
   let timer_interval = null;
   let turn_locked = false;
+  let idle_timer = null;
+  const IDLE_LIMIT = 10; // seconds
+
+  function startIdleTimer() {
+    if (idle_timer) clearInterval(idle_timer);
+    idle_timer = setInterval(() => {
+      if (players[current_player_idx] !== "AI player" && !turn_locked && ROBOT_ENABLE === false) {
+        // Speak motivational words
+        const messages = [
+          "Keep going! You can do it!",
+          "Don't give up, try again!",
+          "Almost there, keep trying!"
+        ];
+        const message = messages[Math.floor(Math.random() * messages.length)];
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.lang = "en-US";
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        speechSynthesis.speak(utterance);
+
+        console.log(`Motivation for ${players[current_player_idx]}: ${message}`);
+      }
+    }, IDLE_LIMIT * 1000);
+  }
 
   // Parse JSON and initialize after DOM is ready
   document.addEventListener("DOMContentLoaded", () => {
@@ -341,25 +370,32 @@
   function switchToNextPlayer() {
     // if (turn_locked) return;
     // // turn_locked = true;
-
+    if (idle_timer) clearInterval(idle_timer);
+    startIdleTimer();
     const player_name = document.getElementById("current-player");
     if (players.length > 0 && player_name) {
-      player_name.textContent = `Current Player: ${players[current_player_idx]}`;
+      if (players[current_player_idx] === 'AI player') {
+        player_name.textContent = `Current Player: QT Robot`;
+      } else {
+        player_name.textContent = `Current Player: ${players[current_player_idx]}`;
+      }
     }
     if (players.length > 1 && player_name) {
-      const message = players[current_player_idx] + "'s turn";
-      // const message = "Current Player is " + players[current_player_idx];
-      const utterance = new SpeechSynthesisUtterance(message);
-      utterance.lang = "en-US";
-      utterance.rate = 0.9;
-      utterance.pitch = 1;
-      speechSynthesis.speak(utterance);
+      if (players[current_player_idx] === 'AI player' && ROBOT_ENABLE === false) {
+        const message = "QT Robot's turn";
+        // const message = "Current Player is " + players[current_player_idx];
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.lang = "en-US";
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        speechSynthesis.speak(utterance);
+      }
     }
 
     console.log(`Current player ${players[current_player_idx]}`);
     if (players[current_player_idx] === "AI player") {
       // turn_locked = true;
-      setTimeout(AIPiecePlacement, 1000);
+      setTimeout(AIPiecePlacement, 800);
     }
     turn_locked = false;
   }
@@ -422,6 +458,8 @@
 
   // Bind drag start to the pieces in the visible tab
   function puzzle_solving() {
+    if (players[current_player_idx] === "AI player") return;
+
     const items = document.querySelectorAll(`#tab${current_tab} .piece`);
 
     items.forEach(item => {
@@ -430,6 +468,7 @@
       item.dataset.bound = "1";
 
       item.addEventListener("mousedown", e => {
+        if (players[current_player_idx] === "AI player") return;
         if (item.classList.contains("locked")) return;
         e.preventDefault();
 
@@ -460,12 +499,14 @@
 
   // Document-level mousemove/mouseup (bound once)
   document.addEventListener("mousemove", e => {
+    if (players[current_player_idx] === "AI player") return;
     if (!current_item) return;
     current_item.style.left = e.clientX - offsetX + "px";
     current_item.style.top = e.clientY - offsetY + "px";
   });
 
   document.addEventListener("mouseup", async e => {
+    if (players[current_player_idx] === "AI player") return;
     if (!current_item || turn_locked) return;
     turn_locked = true;
     current_item.style.cursor = "grab";
@@ -664,7 +705,7 @@
       turn_locked = false;
       switchToNextPlayer();
       checkPuzzleComplete(current_tab);
-    }, 1000);
+    }, 2000);
 
   }
 

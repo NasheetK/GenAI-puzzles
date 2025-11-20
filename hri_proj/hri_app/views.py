@@ -3,21 +3,22 @@ from django.shortcuts import redirect
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 from .core_functions.puzzle_generation import *
 from .core_functions.ai_rating import *
 from .models import *
 
 from datetime import datetime
 import json
-import pyttsx3
 
+# import pyttsx3
 # init text-to-speech engine
-engine = pyttsx3.init()
-rate = engine.getProperty('rate')
-engine.setProperty('rate', rate - 50)
-engine.setProperty('volume', 1)
-voices = engine.getProperty('voices')
-engine.setProperty('voice', voices[0].id)
+# engine = pyttsx3.init()
+# rate = engine.getProperty('rate')
+# engine.setProperty('rate', rate - 50)
+# engine.setProperty('volume', 1)
+# voices = engine.getProperty('voices')
+# engine.setProperty('voice', voices[0].id)
 # Create your views here.
 
 
@@ -72,7 +73,10 @@ def form_team_collaborative_multi(request):
 
 @csrf_exempt
 def puzzle_settings(request):
-    difficulties = ['Beginner', 'Easy', 'Medium', 'Hard', 'Expert']
+    if settings.DEMO_ENABLE:
+        difficulties = ['Beginner', 'Easy', 'Medium', 'Hard', 'Expert', 'Demo']
+    else:
+        difficulties = ['Beginner', 'Easy', 'Medium', 'Hard', 'Expert']
     characters = ['Rabbit', 'Cat', 'Dog', 'Tiger', 'Bear']
     activities = ['School']#, 'Playground', 'Forest']
     # bg_colors = ['Red', 'Green', 'Blue', 'Yellow']
@@ -110,7 +114,7 @@ def puzzle_settings(request):
             'with_ai': with_ai
         }
         # print(puzzle_config)
-        full_img_list, full_id_list, piece_detail_list, total_time = create_puzzle(puzzle_config)
+        full_img_list, full_id_list, piece_detail_list, total_time = create_puzzle(puzzle_config, with_ai)
 
         # save to database
         for img_path, img_id, pieces in zip(full_img_list, full_id_list, piece_detail_list):
@@ -153,10 +157,19 @@ def instruction(request):
     for name in players:
         message += ' ' + name
     message += ', \n'
-    info = "You will be solving " + str(count) + " puzzles in " + mode + ' mode in ' + str(total_time) + ' minutes. '
+
+    total_seconds = round(total_time * 60)
+    minute = total_seconds // 60
+    second = total_seconds % 60
+    if second == 0:
+        time_msg = str(minute) + ' minutes. '
+    else:
+        time_msg = str(minute) + ' minutes ' + str(second) + ' seconds. '
+
+    info = "You will be solving " + str(count) + " puzzles in " + mode + ' mode in ' + time_msg
     message += info
     if with_ai:
-        message += 'And an AI player will collaborate with you by taking turns.'
+        message += 'And the QT robot will collaborate with you by taking turns.'
 
     if request.method == "POST":
         if mode == 'competitive':
@@ -256,7 +269,7 @@ def solve_collab(request, grid=4):
         })
 
     else:
-        full_img_list, full_id_list, piece_detail_list, total_time = create_puzzle(puzzle_config)
+        full_img_list, full_id_list, piece_detail_list, total_time = create_puzzle(puzzle_config, with_ai)
         full_info_list = list(zip(full_img_list, full_id_list, piece_detail_list))
         request.session['full_info_list'] = full_info_list
         puzzle_config['full_info_list'] = full_info_list
@@ -419,7 +432,7 @@ def solve_compete(request, grid=4):
         })
 
     else:
-        full_img_list, full_id_list, piece_detail_list, total_time = create_puzzle(puzzle_config)
+        full_img_list, full_id_list, piece_detail_list, total_time = create_puzzle(puzzle_config, False)
         full_info_list = list(zip(full_img_list, full_id_list, piece_detail_list))
         request.session['full_info_list'] = full_info_list
         puzzle_config['full_info_list'] = full_info_list

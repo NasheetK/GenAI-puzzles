@@ -6,24 +6,17 @@ import os
 from .image_generation import *
 
 
-def create_puzzle(puzzle_config):
+def create_puzzle(puzzle_config, with_ai):
     mode = puzzle_config['mode']
     players = puzzle_config['players']
-    difficulty_map = {
-        'Beginner': 1,
-        'Easy': 2,
-        'Medium': 3,
-        'Hard': 4,
-        'Expert': 5
-    }
-    difficulty_value = difficulty_map.get(puzzle_config['difficulty'], 1) # at least one puzzle
 
     # if mode == 'competitive':
     #     img_amount = int(np.floor(difficulty_value))
     # else:
     #     img_amount = max(int(np.floor(len(players) * difficulty_value / 2)), 1) # at least one puzzle
     # img_amount = 2
-    img_amount, total_time = get_amount_and_time(mode, len(players), difficulty_value)
+
+    img_amount, total_time = get_amount_and_time(mode, len(players), puzzle_config['difficulty'], with_ai)
     full_img_list = []
     full_id_list = []
     piece_detail_list = []
@@ -41,8 +34,34 @@ def create_puzzle(puzzle_config):
     return full_img_list, full_id_list, piece_detail_list, total_time
 
 
-def get_amount_and_time(mode, num_players, difficulty_value):
-    return 2, 1
+def get_amount_and_time(mode, num_players, difficulty_level, with_ai):
+    difficulty_mapping = {
+        'Beginner': [1, 3], # puzzle_amount, time_limit
+        'Easy': [2, 5],
+        'Medium': [3, 7],
+        'Hard': [4, 8],
+        'Expert': [5, 10],
+        'Demo': [4, 2],
+    }
+
+    results = difficulty_mapping.get(difficulty_level, [4, 2])
+
+    if mode == "competitive":
+        return results[0], results[1]
+    else: # collaborative
+        if num_players == 1 and not with_ai:
+            return results[0], results[1]
+
+        if num_players == 1 and with_ai:
+            return results[0], results[1] * 0.75
+
+        if not with_ai:
+            scaling = num_players // 2 * 0.1
+            return results[0], results[1] * (1 - scaling)
+        else:
+            scaling = num_players // 2
+            1 - (0.25 / scaling)
+            return results[0], results[1] * (1 - (0.25 / scaling))
 
 
 def split_to_pieces(img_path, img_id, grid=4, target_size=(256, 256)):

@@ -73,7 +73,7 @@
           aria-checked="true"
         />
         <label for="useAiCheckbox">
-          Involve AI player
+          Involve QT robot
         </label><br>
       {% endif %}
 
@@ -96,7 +96,10 @@
   </main>
 </body>
 <script>
-  window.addEventListener("DOMContentLoaded", () => {
+  const ROBOT_ENABLE = {{ robot_enable|yesno:"true,false" }};
+  console.log("Robot enabled?", ROBOT_ENABLE);
+  if (ROBOT_ENABLE === false) {
+    window.addEventListener("DOMContentLoaded", () => {
       try {
         const message = "Please set your preferences for the puzzles.";
         const utterance = new SpeechSynthesisUtterance(message);
@@ -105,10 +108,12 @@
         utterance.pitch = 1;
         speechSynthesis.speak(utterance);
       } catch(_) {}
-  });
-  window.addEventListener("beforeunload", () => {
-      speechSynthesis.cancel();
     });
+
+    window.addEventListener("beforeunload", () => {
+        speechSynthesis.cancel();
+    });
+  }
 
   const audio = document.getElementById("bg-audio");
     // Key used to store time for audio_others

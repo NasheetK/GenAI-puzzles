@@ -1,6 +1,10 @@
 
+import os
 import random
 from glob import glob
+from django.conf import settings
+
+random.seed(os.urandom(32))
 
 
 def create_single_img(puzzle_config):
@@ -9,7 +13,14 @@ def create_single_img(puzzle_config):
     img_folder = "hri_app/static/imgs/" + character + "_" + activity + "_*.png"
     # image1 = "hri_app/static/imgs/tl.png"
     # image2 = "hri_app/static/imgs/zp.png"
-    img_list = glob(img_folder)
-    print(img_list)
-    selected_image = random.choice(img_list)
-    return selected_image
+
+    if settings.PUZZLE_PIPELINE == 'offline':
+        img_list = glob(img_folder)
+        print(img_list)
+        selected_image = random.choice(img_list)
+        return selected_image
+    else:
+        img_list = glob(img_folder)
+        print(img_list)
+        selected_image = random.choice(img_list)
+        return selected_image
