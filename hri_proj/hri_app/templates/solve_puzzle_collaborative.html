@@ -409,9 +409,10 @@
     //   send_record_to_log("pause", index - 1);
     // }
 
-    current_tab = index;
     const tabs = document.querySelectorAll(".tabcontent");
     const buttons = document.querySelectorAll(".tab button");
+
+    current_tab = index;
 
     tabs.forEach(t => (t.style.display = "none"));
     buttons.forEach(b => b.classList.remove("active"));
@@ -458,7 +459,7 @@
 
   // Bind drag start to the pieces in the visible tab
   function puzzle_solving() {
-    if (players[current_player_idx] === "AI player") return;
+    // if (players[current_player_idx] === "AI player") return;
 
     const items = document.querySelectorAll(`#tab${current_tab} .piece`);
 
