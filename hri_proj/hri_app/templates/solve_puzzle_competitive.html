@@ -304,6 +304,7 @@
         utterance.lang = "en-US";
         utterance.rate = 0.9;
         utterance.pitch = 1;
+
         speechSynthesis.speak(utterance);
       }
 
@@ -346,16 +347,34 @@
     startIdleTimer("p2");
 
     // attach tab events dynamically
-    document.querySelectorAll(".tablinks").forEach(btn=>{
-      btn.addEventListener("click", ()=>{
+    // document.querySelectorAll(".tablinks").forEach(btn=>{
+    //   btn.addEventListener("click", ()=>{
+    //     const player = btn.dataset.player;
+    //     const index = parseInt(btn.dataset.index);
+    //     showTab(player, index);
+    //     // send_record_to_log(player, "start", index);
+    //     tmp_player_name = (player === "p1") ? players[0] : players[1];
+    //     console.log("Tab click player:", tmp_player_name);
+    //     send_record_to_log(tmp_player_name, "start", index);
+    //   });
+    // });
+    document.querySelectorAll(".tablinks").forEach(btn => {
+      const switchTab = () => {
         const player = btn.dataset.player;
         const index = parseInt(btn.dataset.index);
         showTab(player, index);
-        // send_record_to_log(player, "start", index);
         tmp_player_name = (player === "p1") ? players[0] : players[1];
-        console.log("Tab click player:", tmp_player_name);
+        console.log("Tab switched for player:", tmp_player_name);
         send_record_to_log(tmp_player_name, "start", index);
-      });
+      };
+
+      // Mouse click
+      btn.addEventListener("click", switchTab);
+      // Touch event
+      btn.addEventListener("touchstart", e => {
+        e.preventDefault(); // prevent accidental click doubling and scrolling
+        switchTab();
+      }, { passive: false });
     });
 
     // set first buttons active
@@ -438,92 +457,308 @@
     tabs[next]?.classList.add("active");
   }
 
-  function puzzle_solving(prefix){
-    const items=document.querySelectorAll(`.piece[id^="${prefix}_"]`);
-    items.forEach(item=>{
-      if(item.dataset.bound==="1") return;
-      item.dataset.bound="1";
-      item.addEventListener("mousedown", e=>{
-        if(item.classList.contains("locked")) return;
-        e.preventDefault();
-        current_item=item;
-        const rect=item.getBoundingClientRect();
-        placeholder=document.createElement("div");
-        placeholder.className="piece-placeholder";
-        placeholder.style.width=rect.width+"px";
-        placeholder.style.height=rect.height+"px";
-        item.parentNode.insertBefore(placeholder,item);
-        item.style.position="fixed";
-        item.style.left=rect.left+"px";
-        item.style.top=rect.top+"px";
-        item.style.zIndex=9999;
-        offsetX=e.clientX-rect.left;
-        offsetY=e.clientY-rect.top;
-      });
+  const activeTouches = {};
+
+  function puzzle_solving(prefix) {
+    const items = document.querySelectorAll(`.piece[id^="${prefix}_"]`);
+    items.forEach(item => {
+      if (item.dataset.bound === "1") return;
+      item.dataset.bound = "1";
+
+      // Mouse events
+      item.addEventListener("mousedown", startDragMouse);
+      // Touch events
+      item.addEventListener("touchstart", startDragTouch, {passive: false});
     });
   }
+    //   item.addEventListener("mousedown", e=>{
+    //     if(item.classList.contains("locked")) return;
+    //     e.preventDefault();
+    //     current_item=item;
+    //     const rect=item.getBoundingClientRect();
+    //     placeholder=document.createElement("div");
+    //     placeholder.className="piece-placeholder";
+    //     placeholder.style.width=rect.width+"px";
+    //     placeholder.style.height=rect.height+"px";
+    //     item.parentNode.insertBefore(placeholder,item);
+    //     item.style.position="fixed";
+    //     item.style.left=rect.left+"px";
+    //     item.style.top=rect.top+"px";
+    //     item.style.zIndex=9999;
+    //     offsetX=e.clientX-rect.left;
+    //     offsetY=e.clientY-rect.top;
+    //   });
+    // });
+  // }
 
-  document.addEventListener("mousemove", e=>{
-    if(!current_item) return;
-    current_item.style.left=e.clientX-offsetX+"px";
-    current_item.style.top=e.clientY-offsetY+"px";
-  });
+  function startDragMouse(e) {
+      if(this.classList.contains("locked")) return;
+      e.preventDefault();
+      initDrag(this, e.clientX, e.clientY);
+  }
 
-  document.addEventListener("mouseup", async e=>{
-    if(!current_item) return;
-    const prefix = current_item.id.startsWith("p1_")?"p1":"p2";
-    const tab_id=current_item.dataset.tab;
-    if(tab_id===undefined||tab_id===null||tab_id===""){
-      console.error("Piece missing data-tab attribute:", current_item);
-      resetPiece(); return;
-    }
-    const dropzone=document.getElementById(`${prefix}_tab${tab_id}_dropzone`);
-    if(!dropzone){ console.error("Dropzone not found:", `${prefix}_tab${tab_id}_dropzone`); resetPiece(); return; }
+  // function startDragTouch(e) {
+  //     if(this.classList.contains("locked")) return;
+  //     e.preventDefault(); // prevent scrolling
+  //     const touch = e.touches[0];
+  //     initDrag(this, touch.clientX, touch.clientY);
+  // }
 
-    const piece_pos=current_item.getBoundingClientRect();
-    const dropzone_pos=dropzone.getBoundingClientRect();
-    const scrollX=window.scrollX||0, scrollY=window.scrollY||0;
+  function startDragTouch(e) {
+      e.preventDefault(); // prevent scrolling
+      const touch = e.changedTouches[0];
+      const item = e.currentTarget;
+      if(item.classList.contains("locked")) return;
 
-    const fd=new FormData();
-    fd.append("index",tab_id);
-    fd.append("name",prefix==="p1"?players[0]:players[1]);
-    fd.append("piece_id",current_item.id);
-    fd.append("x",piece_pos.left+scrollX);
-    fd.append("y",piece_pos.top+scrollY);
-    fd.append("target_left",dropzone_pos.left+scrollX);
-    fd.append("target_top",dropzone_pos.top+scrollY);
-    fd.append("target_right",dropzone_pos.right+scrollX);
-    fd.append("target_bottom",dropzone_pos.bottom+scrollY);
+      const rect = item.getBoundingClientRect();
+      const placeholder = document.createElement("div");
+      placeholder.className = "piece-placeholder";
+      placeholder.style.width = rect.width + "px";
+      placeholder.style.height = rect.height + "px";
+      item.parentNode.insertBefore(placeholder, item);
 
-    try{
-      const res=await fetch("{% url 'solve_compete' %}", {method:"POST", body:fd});
-      const data=await res.json();
-      if(data.success){
-        const dx=data.correct_x-(dropzone_pos.left+scrollX);
-        const dy=data.correct_y-(dropzone_pos.top+scrollY);
-        if(placeholder && placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
-        current_item.style.position="absolute";
-        current_item.style.left=dx+"px";
-        current_item.style.top=dy+"px";
-        current_item.style.zIndex=2;
-        current_item.classList.add("locked");
-        dropzone.appendChild(current_item);
+      item.style.position = "fixed";
+      item.style.left = rect.left + "px";
+      item.style.top = rect.top + "px";
+      item.style.zIndex = 9999;
 
-        if (prefix === "p1") {
-            if (idle_timer_p1) clearInterval(idle_timer_p1);
-            startIdleTimer("p1");
-        } else {
-            if (idle_timer_p2) clearInterval(idle_timer_p2);
-            startIdleTimer("p2");
-        }
-        checkPuzzleComplete(prefix, tab_id);
+      activeTouches[touch.identifier] = {
+          item: item,
+          placeholder: placeholder,
+          offsetX: touch.clientX - rect.left,
+          offsetY: touch.clientY - rect.top
+      };
+  }
 
-      } else { resetPiece(); }
-    }catch(err){ console.error(err); resetPiece(); }
+  function initDrag(item, clientX, clientY) {
+      current_item = item;
+      const rect = item.getBoundingClientRect();
 
-    current_item=null;
-    placeholder=null;
-  });
+      // create placeholder
+      placeholder = document.createElement("div");
+      placeholder.className = "piece-placeholder";
+      placeholder.style.width = rect.width + "px";
+      placeholder.style.height = rect.height + "px";
+      item.parentNode.insertBefore(placeholder, item);
+
+      // fix the item
+      item.style.position = "fixed";
+      item.style.left = rect.left + "px";
+      item.style.top = rect.top + "px";
+      item.style.zIndex = 9999;
+
+      offsetX = clientX - rect.left;
+      offsetY = clientY - rect.top;
+  }
+
+  document.addEventListener("mousemove", dragMoveMouse);
+  document.addEventListener("touchmove", dragMoveTouch, {passive: false});
+  // document.addEventListener("mousemove", e=>{
+  //   if(!current_item) return;
+  //   current_item.style.left=e.clientX-offsetX+"px";
+  //   current_item.style.top=e.clientY-offsetY+"px";
+  // });
+  function dragMoveMouse(e) {
+      if(!current_item) return;
+      current_item.style.left = e.clientX - offsetX + "px";
+      current_item.style.top = e.clientY - offsetY + "px";
+  }
+
+  // function dragMoveTouch(e) {
+  //     if(!current_item) return;
+  //     e.preventDefault();
+  //     const touch = e.touches[0];
+  //     current_item.style.left = touch.clientX - offsetX + "px";
+  //     current_item.style.top = touch.clientY - offsetY + "px";
+  // }
+  function dragMoveTouch(e) {
+      e.preventDefault();
+      for (let i = 0; i < e.touches.length; i++) {
+          const touch = e.touches[i];
+          const data = activeTouches[touch.identifier];
+          if (!data) continue;
+          data.item.style.left = touch.clientX - data.offsetX + "px";
+          data.item.style.top = touch.clientY - data.offsetY + "px";
+      }
+  }
+
+  document.addEventListener("mouseup", dropPieceMouse);
+  document.addEventListener("touchend", dropPieceTouch);
+
+  function dropPieceMouse(e) { dropPiece(e.clientX, e.clientY); }
+  // function dropPieceTouch(e) {
+  //     if(!current_item) return;
+  //     const touch = e.changedTouches[0];
+  //     dropPiece(touch.clientX, touch.clientY);
+  // }
+  function dropPieceTouch(e) {
+      e.preventDefault();
+      for (let i = 0; i < e.changedTouches.length; i++) {
+          const touch = e.changedTouches[i];
+          const data = activeTouches[touch.identifier];
+          if (!data) continue;
+
+          dropPieceByItem(data.item, data.placeholder);
+
+          delete activeTouches[touch.identifier];
+      }
+  }
+
+  // document.addEventListener("mouseup", async e=>{
+  //   if(!current_item) return;
+  //   const prefix = current_item.id.startsWith("p1_")?"p1":"p2";
+  //   const tab_id=current_item.dataset.tab;
+  //   if(tab_id===undefined||tab_id===null||tab_id===""){
+  //     console.error("Piece missing data-tab attribute:", current_item);
+  //     resetPiece(); return;
+  //   }
+  //   const dropzone=document.getElementById(`${prefix}_tab${tab_id}_dropzone`);
+  //   if(!dropzone){ console.error("Dropzone not found:", `${prefix}_tab${tab_id}_dropzone`); resetPiece(); return; }
+  //
+  //   const piece_pos=current_item.getBoundingClientRect();
+  //   const dropzone_pos=dropzone.getBoundingClientRect();
+  //   const scrollX=window.scrollX||0, scrollY=window.scrollY||0;
+  //
+  //   const fd=new FormData();
+  //   fd.append("index",tab_id);
+  //   fd.append("name",prefix==="p1"?players[0]:players[1]);
+  //   fd.append("piece_id",current_item.id);
+  //   fd.append("x",piece_pos.left+scrollX);
+  //   fd.append("y",piece_pos.top+scrollY);
+  //   fd.append("target_left",dropzone_pos.left+scrollX);
+  //   fd.append("target_top",dropzone_pos.top+scrollY);
+  //   fd.append("target_right",dropzone_pos.right+scrollX);
+  //   fd.append("target_bottom",dropzone_pos.bottom+scrollY);
+  //
+  //   try{
+  //     const res=await fetch("{% url 'solve_compete' %}", {method:"POST", body:fd});
+  //     const data=await res.json();
+  //     if(data.success){
+  //       const dx=data.correct_x-(dropzone_pos.left+scrollX);
+  //       const dy=data.correct_y-(dropzone_pos.top+scrollY);
+  //       if(placeholder && placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+  //       current_item.style.position="absolute";
+  //       current_item.style.left=dx+"px";
+  //       current_item.style.top=dy+"px";
+  //       current_item.style.zIndex=2;
+  //       current_item.classList.add("locked");
+  //       dropzone.appendChild(current_item);
+  //
+  //       if (prefix === "p1") {
+  //           if (idle_timer_p1) clearInterval(idle_timer_p1);
+  //           startIdleTimer("p1");
+  //       } else {
+  //           if (idle_timer_p2) clearInterval(idle_timer_p2);
+  //           startIdleTimer("p2");
+  //       }
+  //       checkPuzzleComplete(prefix, tab_id);
+  //
+  //     } else { resetPiece(); }
+  //   }catch(err){ console.error(err); resetPiece(); }
+  //
+  //   current_item=null;
+  //   placeholder=null;
+  // });
+
+  async function dropPiece(clientX, clientY) {
+      if(!current_item) return;
+      const prefix = current_item.id.startsWith("p1_") ? "p1" : "p2";
+      const tab_id = current_item.dataset.tab;
+      if(tab_id === undefined || tab_id === null || tab_id === "") { resetPiece(); return; }
+
+      const dropzone = document.getElementById(`${prefix}_tab${tab_id}_dropzone`);
+      if(!dropzone) { resetPiece(); return; }
+
+      const piece_pos = current_item.getBoundingClientRect();
+      const dropzone_pos = dropzone.getBoundingClientRect();
+      const scrollX = window.scrollX || 0, scrollY = window.scrollY || 0;
+
+      const fd = new FormData();
+      fd.append("index", tab_id);
+      fd.append("name", prefix === "p1" ? players[0] : players[1]);
+      fd.append("piece_id", current_item.id);
+      fd.append("x", piece_pos.left + scrollX);
+      fd.append("y", piece_pos.top + scrollY);
+      fd.append("target_left", dropzone_pos.left + scrollX);
+      fd.append("target_top", dropzone_pos.top + scrollY);
+      fd.append("target_right", dropzone_pos.right + scrollX);
+      fd.append("target_bottom", dropzone_pos.bottom + scrollY);
+
+      try {
+          const res = await fetch("{% url 'solve_compete' %}", {method: "POST", body: fd});
+          const data = await res.json();
+          if(data.success) {
+              const dx = data.correct_x - (dropzone_pos.left + scrollX);
+              const dy = data.correct_y - (dropzone_pos.top + scrollY);
+
+              if(placeholder && placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+
+              current_item.style.position = "absolute";
+              current_item.style.left = dx + "px";
+              current_item.style.top = dy + "px";
+              current_item.style.zIndex = 2;
+              current_item.classList.add("locked");
+              dropzone.appendChild(current_item);
+
+              if(prefix === "p1") { if(idle_timer_p1) clearInterval(idle_timer_p1); startIdleTimer("p1"); }
+              else { if(idle_timer_p2) clearInterval(idle_timer_p2); startIdleTimer("p2"); }
+
+              checkPuzzleComplete(prefix, tab_id);
+          } else { resetPiece(); }
+      } catch(err) { console.error(err); resetPiece(); }
+
+      current_item = null;
+      placeholder = null;
+  }
+
+  async function dropPieceByItem(item, placeholder) {
+      const prefix = item.id.startsWith("p1_") ? "p1" : "p2";
+      const tab_id = item.dataset.tab;
+      if(!tab_id) return;
+
+      const dropzone = document.getElementById(`${prefix}_tab${tab_id}_dropzone`);
+      if(!dropzone) return;
+
+      const piece_pos = item.getBoundingClientRect();
+      const dropzone_pos = dropzone.getBoundingClientRect();
+      const scrollX = window.scrollX || 0, scrollY = window.scrollY || 0;
+
+      const fd = new FormData();
+      fd.append("index", tab_id);
+      fd.append("name", prefix === "p1" ? players[0] : players[1]);
+      fd.append("piece_id", item.id);
+      fd.append("x", piece_pos.left + scrollX);
+      fd.append("y", piece_pos.top + scrollY);
+      fd.append("target_left", dropzone_pos.left + scrollX);
+      fd.append("target_top", dropzone_pos.top + scrollY);
+      fd.append("target_right", dropzone_pos.right + scrollX);
+      fd.append("target_bottom", dropzone_pos.bottom + scrollY);
+
+      try {
+          const res = await fetch("{% url 'solve_compete' %}", { method: "POST", body: fd });
+          const data = await res.json();
+          if(data.success) {
+              const dx = data.correct_x - (dropzone_pos.left + scrollX);
+              const dy = data.correct_y - (dropzone_pos.top + scrollY);
+
+              if(placeholder && placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+
+              item.style.position = "absolute";
+              item.style.left = dx + "px";
+              item.style.top = dy + "px";
+              item.style.zIndex = 2;
+              item.classList.add("locked");
+              dropzone.appendChild(item);
+
+              if(prefix === "p1") { if(idle_timer_p1) clearInterval(idle_timer_p1); startIdleTimer("p1"); }
+              else { if(idle_timer_p2) clearInterval(idle_timer_p2); startIdleTimer("p2"); }
+
+              checkPuzzleComplete(prefix, tab_id);
+          } else {
+              resetPieceTouch(item, placeholder);
+          }
+      } catch(err) { console.error(err); resetPieceTouch(item, placeholder); }
+  }
 
   function resetPiece(){
     if(placeholder && placeholder.parentNode) placeholder.parentNode.replaceChild(current_item,placeholder);
@@ -534,6 +769,18 @@
     current_item.style.height="";
     current_item.style.zIndex="";
     current_item=null; placeholder=null;
+  }
+
+  function resetPieceTouch(item, placeholder) {
+      if(placeholder && placeholder.parentNode) {
+          placeholder.parentNode.replaceChild(item, placeholder);
+      }
+      item.style.position = "";
+      item.style.left = "";
+      item.style.top = "";
+      item.style.width = "";
+      item.style.height = "";
+      item.style.zIndex = "";
   }
 </script>
 </body>

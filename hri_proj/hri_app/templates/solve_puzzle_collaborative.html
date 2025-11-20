@@ -467,136 +467,276 @@
       if (item.dataset.bound === "1") return;
       item.dataset.bound = "1";
 
-      item.addEventListener("mousedown", e => {
-        if (players[current_player_idx] === "AI player") return;
-        if (item.classList.contains("locked")) return;
-        e.preventDefault();
-
-        current_item = item;
-        const rect = current_item.getBoundingClientRect();
-
-        // placeholder to preserve layout
-        placeholder = document.createElement("div");
-        placeholder.className = "piece-placeholder";
-        placeholder.style.width = rect.width + "px";
-        placeholder.style.height = rect.height + "px";
-        current_item.parentNode.insertBefore(placeholder, current_item);
-
-        // fix position during drag
-        current_item.style.position = "fixed";
-        current_item.style.left = rect.left + "px";
-        current_item.style.top = rect.top + "px";
-        current_item.style.width = rect.width + "px";
-        current_item.style.height = rect.height + "px";
-        current_item.style.zIndex = 9999;
-        current_item.style.cursor = "grabbing";
-
-        offsetX = e.clientX - rect.left;
-        offsetY = e.clientY - rect.top;
-      });
+      // Mouse start
+      item.addEventListener("mousedown", startDragMouse);
+      // Touch start
+      item.addEventListener("touchstart", startDragTouch, {passive: false});
     });
   }
+      // item.addEventListener("mousedown", e => {
+      //   if (players[current_player_idx] === "AI player") return;
+      //   if (item.classList.contains("locked")) return;
+      //   e.preventDefault();
+      //
+      //   current_item = item;
+      //   const rect = current_item.getBoundingClientRect();
+      //
+      //   // placeholder to preserve layout
+      //   placeholder = document.createElement("div");
+      //   placeholder.className = "piece-placeholder";
+      //   placeholder.style.width = rect.width + "px";
+      //   placeholder.style.height = rect.height + "px";
+      //   current_item.parentNode.insertBefore(placeholder, current_item);
+      //
+      //   // fix position during drag
+      //   current_item.style.position = "fixed";
+      //   current_item.style.left = rect.left + "px";
+      //   current_item.style.top = rect.top + "px";
+      //   current_item.style.width = rect.width + "px";
+      //   current_item.style.height = rect.height + "px";
+      //   current_item.style.zIndex = 9999;
+      //   current_item.style.cursor = "grabbing";
+      //
+      //   offsetX = e.clientX - rect.left;
+      //   offsetY = e.clientY - rect.top;
+      // });
+  //   });
+  // }
+  function startDragMouse(e) {
+    if (current_item || e.button !== 0 || this.classList.contains("locked")) return;
+    e.preventDefault();
+    initDrag(this, e.clientX, e.clientY);
+  }
 
-  // Document-level mousemove/mouseup (bound once)
-  document.addEventListener("mousemove", e => {
-    if (players[current_player_idx] === "AI player") return;
+  function startDragTouch(e) {
+    if (current_item || this.classList.contains("locked")) return;
+    e.preventDefault(); // prevent scrolling
+    const touch = e.touches[0];
+    initDrag(this, touch.clientX, touch.clientY);
+  }
+
+  function initDrag(item, clientX, clientY) {
+    current_item = item;
+    const rect = item.getBoundingClientRect();
+
+    placeholder = document.createElement("div");
+    placeholder.className = "piece-placeholder";
+    placeholder.style.width = rect.width + "px";
+    placeholder.style.height = rect.height + "px";
+    item.parentNode.insertBefore(placeholder, item);
+
+    item.style.position = "fixed";
+    item.style.left = rect.left + "px";
+    item.style.top = rect.top + "px";
+    item.style.zIndex = 9999;
+
+    offsetX = clientX - rect.left;
+    offsetY = clientY - rect.top;
+  }
+
+  // document.addEventListener("mousemove", e => {
+  //   if (players[current_player_idx] === "AI player") return;
+  //   if (!current_item) return;
+  //   current_item.style.left = e.clientX - offsetX + "px";
+  //   current_item.style.top = e.clientY - offsetY + "px";
+  // });
+
+  document.addEventListener("mousemove", dragMoveMouse);
+  document.addEventListener("touchmove", dragMoveTouch, {passive: false});
+
+  function dragMoveMouse(e) {
     if (!current_item) return;
     current_item.style.left = e.clientX - offsetX + "px";
     current_item.style.top = e.clientY - offsetY + "px";
+  }
+
+  function dragMoveTouch(e) {
+    if (!current_item) return;
+    e.preventDefault(); // prevent scrolling
+    const touch = e.touches[0];
+    current_item.style.left = touch.clientX - offsetX + "px";
+    current_item.style.top = touch.clientY - offsetY + "px";
+  }
+
+  // document.addEventListener("mouseup", async e => {
+  //   if (players[current_player_idx] === "AI player") return;
+  //   if (!current_item || turn_locked) return;
+  //   turn_locked = true;
+  //   current_item.style.cursor = "grab";
+  //
+  //   const piece_pos = current_item.getBoundingClientRect();
+  //   const dropzone = document.getElementById("tab" + current_tab + "_dropzone");
+  //   const dropzone_pos = dropzone.getBoundingClientRect();
+  //
+  //   const scrollX = window.scrollX || document.documentElement.scrollLeft;
+  //   const scrollY = window.scrollY || document.documentElement.scrollTop;
+  //
+  //   const drag_pos_data = new FormData();
+  //   drag_pos_data.append("index", current_tab);
+  //   drag_pos_data.append("name", players[current_player_idx]);
+  //   drag_pos_data.append("piece_id", current_item.id);
+  //   drag_pos_data.append("x", piece_pos.left + scrollX);
+  //   drag_pos_data.append("y", piece_pos.top + scrollY);
+  //   drag_pos_data.append("target_left", dropzone_pos.left + scrollX);
+  //   drag_pos_data.append("target_top", dropzone_pos.top + scrollY);
+  //   drag_pos_data.append("target_right", dropzone_pos.right + scrollX);
+  //   drag_pos_data.append("target_bottom", dropzone_pos.bottom + scrollY);
+  //
+  //   try {
+  //     const response = await fetch("{% url 'solve_collab' %}", {
+  //       method: "POST",
+  //       body: drag_pos_data,
+  //     });
+  //     const data = await response.json();
+  //
+  //     if (data.success) {
+  //       // snap offset within the dropzone
+  //       const scrollX = window.scrollX || document.documentElement.scrollLeft;
+  //       const scrollY = window.scrollY || document.documentElement.scrollTop;
+  //       // const dx = data.correct_x - dropzone_pos.left;
+  //       // const dy = data.correct_y - dropzone_pos.top;
+  //       const dx = data.correct_x - (dropzone_pos.left + scrollX);
+  //       const dy = data.correct_y - (dropzone_pos.top + scrollY);
+  //
+  //       // remove placeholder
+  //       if (placeholder && placeholder.parentNode) {
+  //         placeholder.parentNode.removeChild(placeholder);
+  //       }
+  //
+  //       // place inside dropzone at snapped coords
+  //       current_item.style.position = "absolute";
+  //       current_item.style.left = dx + "px";
+  //       current_item.style.top = dy + "px";
+  //       current_item.style.zIndex = 2;
+  //       current_item.classList.add("locked");
+  //       dropzone.appendChild(current_item);
+  //
+  //       current_player_idx = (current_player_idx + 1) % players.length;
+  //       turn_locked = false;
+  //       switchToNextPlayer();
+  //       checkPuzzleComplete(current_tab);
+  //
+  //     } else {
+  //       // revert to original spot
+  //       if (placeholder && placeholder.parentNode) {
+  //         placeholder.parentNode.replaceChild(current_item, placeholder);
+  //       }
+  //       current_item.style.position = "";
+  //       current_item.style.left = "";
+  //       current_item.style.top = "";
+  //       current_item.style.width = "";
+  //       current_item.style.height = "";
+  //       current_item.style.zIndex = "";
+  //     }
+  //   } catch (error) {
+  //     console.error("Error in piece position verification!", error);
+  //     if (placeholder && placeholder.parentNode) {
+  //       placeholder.parentNode.replaceChild(current_item, placeholder);
+  //     }
+  //     current_item.style.position = "";
+  //     current_item.style.left = "";
+  //     current_item.style.top = "";
+  //     current_item.style.width = "";
+  //     current_item.style.height = "";
+  //     current_item.style.zIndex = "";
+  //   }
+  //
+  //   current_item = null;
+  //   placeholder = null;
+  //   turn_locked = false;
+  //   // if (players[current_player_idx] !== "AI player") {
+  //   //   turn_locked = true;
+  //   //   switchToNextPlayer();
+  //   // }
+  // });
+  document.addEventListener("mouseup", e => dropPiece(e.clientX, e.clientY));
+  document.addEventListener("touchend", e => {
+    if (!current_item) return;
+    const touch = e.changedTouches[0];
+    dropPiece(touch.clientX, touch.clientY);
   });
 
-  document.addEventListener("mouseup", async e => {
-    if (players[current_player_idx] === "AI player") return;
-    if (!current_item || turn_locked) return;
-    turn_locked = true;
-    current_item.style.cursor = "grab";
+  async function dropPiece(clientX, clientY) {
+      if (!current_item || turn_locked) return;
+      turn_locked = true;
 
-    const piece_pos = current_item.getBoundingClientRect();
-    const dropzone = document.getElementById("tab" + current_tab + "_dropzone");
-    const dropzone_pos = dropzone.getBoundingClientRect();
+      current_item.style.cursor = "grab";
 
-    const scrollX = window.scrollX || document.documentElement.scrollLeft;
-    const scrollY = window.scrollY || document.documentElement.scrollTop;
+      const piece_pos = current_item.getBoundingClientRect();
+      const dropzone = document.getElementById("tab" + current_tab + "_dropzone");
+      const dropzone_pos = dropzone.getBoundingClientRect();
 
-    const drag_pos_data = new FormData();
-    drag_pos_data.append("index", current_tab);
-    drag_pos_data.append("name", players[current_player_idx]);
-    drag_pos_data.append("piece_id", current_item.id);
-    drag_pos_data.append("x", piece_pos.left + scrollX);
-    drag_pos_data.append("y", piece_pos.top + scrollY);
-    drag_pos_data.append("target_left", dropzone_pos.left + scrollX);
-    drag_pos_data.append("target_top", dropzone_pos.top + scrollY);
-    drag_pos_data.append("target_right", dropzone_pos.right + scrollX);
-    drag_pos_data.append("target_bottom", dropzone_pos.bottom + scrollY);
+      const scrollX = window.scrollX || document.documentElement.scrollLeft;
+      const scrollY = window.scrollY || document.documentElement.scrollTop;
 
-    try {
-      const response = await fetch("{% url 'solve_collab' %}", {
-        method: "POST",
-        body: drag_pos_data,
-      });
-      const data = await response.json();
+      const drag_pos_data = new FormData();
+      drag_pos_data.append("index", current_tab);
+      drag_pos_data.append("name", players[current_player_idx]);
+      drag_pos_data.append("piece_id", current_item.id);
+      drag_pos_data.append("x", piece_pos.left + scrollX);
+      drag_pos_data.append("y", piece_pos.top + scrollY);
+      drag_pos_data.append("target_left", dropzone_pos.left + scrollX);
+      drag_pos_data.append("target_top", dropzone_pos.top + scrollY);
+      drag_pos_data.append("target_right", dropzone_pos.right + scrollX);
+      drag_pos_data.append("target_bottom", dropzone_pos.bottom + scrollY);
 
-      if (data.success) {
-        // snap offset within the dropzone
-        const scrollX = window.scrollX || document.documentElement.scrollLeft;
-        const scrollY = window.scrollY || document.documentElement.scrollTop;
-        // const dx = data.correct_x - dropzone_pos.left;
-        // const dy = data.correct_y - dropzone_pos.top;
-        const dx = data.correct_x - (dropzone_pos.left + scrollX);
-        const dy = data.correct_y - (dropzone_pos.top + scrollY);
+      try {
+          const response = await fetch("{% url 'solve_collab' %}", {
+              method: "POST",
+              body: drag_pos_data,
+          });
+          const data = await response.json();
 
-        // remove placeholder
-        if (placeholder && placeholder.parentNode) {
-          placeholder.parentNode.removeChild(placeholder);
-        }
+          if (data.success) {
+              const dx = data.correct_x - (dropzone_pos.left + scrollX);
+              const dy = data.correct_y - (dropzone_pos.top + scrollY);
 
-        // place inside dropzone at snapped coords
-        current_item.style.position = "absolute";
-        current_item.style.left = dx + "px";
-        current_item.style.top = dy + "px";
-        current_item.style.zIndex = 2;
-        current_item.classList.add("locked");
-        dropzone.appendChild(current_item);
+              if (placeholder && placeholder.parentNode) {
+                  placeholder.parentNode.removeChild(placeholder);
+              }
 
-        current_player_idx = (current_player_idx + 1) % players.length;
-        turn_locked = false;
-        switchToNextPlayer();
-        checkPuzzleComplete(current_tab);
+              current_item.style.position = "absolute";
+              current_item.style.left = dx + "px";
+              current_item.style.top = dy + "px";
+              current_item.style.zIndex = 2;
+              current_item.classList.add("locked");
+              dropzone.appendChild(current_item);
 
-      } else {
-        // revert to original spot
-        if (placeholder && placeholder.parentNode) {
-          placeholder.parentNode.replaceChild(current_item, placeholder);
-        }
-        current_item.style.position = "";
-        current_item.style.left = "";
-        current_item.style.top = "";
-        current_item.style.width = "";
-        current_item.style.height = "";
-        current_item.style.zIndex = "";
+              current_player_idx = (current_player_idx + 1) % players.length;
+              turn_locked = false;
+              switchToNextPlayer();
+              await checkPuzzleComplete(current_tab);
+
+          } else {
+              // revert to original position
+              if (placeholder && placeholder.parentNode) {
+                  placeholder.parentNode.replaceChild(current_item, placeholder);
+              }
+              current_item.style.position = "";
+              current_item.style.left = "";
+              current_item.style.top = "";
+              current_item.style.width = "";
+              current_item.style.height = "";
+              current_item.style.zIndex = "";
+              turn_locked = false;
+          }
+      } catch (error) {
+          console.error("Error verifying piece position!", error);
+          if (placeholder && placeholder.parentNode) {
+              placeholder.parentNode.replaceChild(current_item, placeholder);
+          }
+          current_item.style.position = "";
+          current_item.style.left = "";
+          current_item.style.top = "";
+          current_item.style.width = "";
+          current_item.style.height = "";
+          current_item.style.zIndex = "";
+          turn_locked = false;
       }
-    } catch (error) {
-      console.error("Error in piece position verification!", error);
-      if (placeholder && placeholder.parentNode) {
-        placeholder.parentNode.replaceChild(current_item, placeholder);
-      }
-      current_item.style.position = "";
-      current_item.style.left = "";
-      current_item.style.top = "";
-      current_item.style.width = "";
-      current_item.style.height = "";
-      current_item.style.zIndex = "";
-    }
 
-    current_item = null;
-    placeholder = null;
-    turn_locked = false;
-    // if (players[current_player_idx] !== "AI player") {
-    //   turn_locked = true;
-    //   switchToNextPlayer();
-    // }
-  });
-
+      current_item = null;
+      placeholder = null;
+  }
 
   async function AIPiecePlacement(){
     if (turn_locked) return;
