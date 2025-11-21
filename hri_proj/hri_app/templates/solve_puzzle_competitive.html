@@ -293,25 +293,43 @@
       const pieces = document.querySelectorAll(`.piece[id^="${prefix}_"]:not(.locked)`);
       if(pieces.length > 0) {
         // speak motivational message
-        const messages = [
-          "Keep going! " + playerName + ". You can do it!",
-          "Don't give up, " + playerName + ". Try again!",
-          "Almost there, " + playerName + ". Keep trying!"
-        ];
-        const message = messages[Math.floor(Math.random() * messages.length)];
-        console.log(`Motivation for ${playerName}: ${message}`);
-        const utterance = new SpeechSynthesisUtterance(message);
-        utterance.lang = "en-US";
-        utterance.rate = 0.9;
-        utterance.pitch = 1;
+        if (ROBOT_ENABLE === false) {
+          const messages = [
+            "Keep going! " + playerName + ". You can do it!",
+            "Don't give up, " + playerName + ". Try again!",
+            "Almost there, " + playerName + ". Keep trying!"
+          ];
+          const message = messages[Math.floor(Math.random() * messages.length)];
+          console.log(`Motivation for ${playerName}: ${message}`);
+          const utterance = new SpeechSynthesisUtterance(message);
+          utterance.lang = "en-US";
+          utterance.rate = 0.9;
+          utterance.pitch = 1;
 
-        speechSynthesis.speak(utterance);
+          speechSynthesis.speak(utterance);
+        } else {
+          robotMotivation(playerName);
+        }
       }
 
     }, IDLE_LIMIT * 1000);
 
     if(prefix === "p1") idle_timer_p1 = interval;
     else idle_timer_p2 = interval;
+  }
+
+  async function robotMotivation(name) {
+    try {
+      const record_data = new FormData();
+      record_data.append("mode", "competitive");
+      record_data.append("name", name);
+      await fetch("{% url 'robot_motivation' %}", {
+        method: "POST",
+        body: record_data,
+      });
+    } catch (err) {
+      console.error("Error sending record:", err);
+    }
   }
 
   async function send_record_to_log(name, action, index) {

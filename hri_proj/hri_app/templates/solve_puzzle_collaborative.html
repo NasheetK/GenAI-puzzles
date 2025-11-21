@@ -331,8 +331,24 @@
         speechSynthesis.speak(utterance);
 
         console.log(`Motivation for ${players[current_player_idx]}: ${message}`);
+      } else if (players[current_player_idx] !== "AI player" && !turn_locked && ROBOT_ENABLE === true) {
+        robotMotivation();
       }
     }, IDLE_LIMIT * 1000);
+  }
+
+  async function robotMotivation() {
+    try {
+      const record_data = new FormData();
+      record_data.append("mode", "collaboration");
+      record_data.append("name", "default");
+      await fetch("{% url 'robot_motivation' %}", {
+        method: "POST",
+        body: record_data,
+      });
+    } catch (err) {
+      console.error("Error sending record:", err);
+    }
   }
 
   // Parse JSON and initialize after DOM is ready

@@ -1,3 +1,5 @@
+import random
+
 from django.shortcuts import render
 from django.shortcuts import redirect
 from django.http import HttpResponse, JsonResponse
@@ -22,9 +24,29 @@ import json
 # Create your views here.
 
 
+# Robot Related Imports
+
+if settings.ROBOT_ENABLE:
+    import rospy
+    from std_msgs.msg import String
+    import subprocess
+    import time
+
+    # Ensure ROS is initialized only once
+    if not rospy.core.is_initialized():
+        rospy.init_node('game_controller', anonymous=True)
+
+    # Create publishers for QTrobot speech, gesture, emotion
+    speech_publisher = rospy.Publisher('/qt_robot/behavior/talkText', String, queue_size=1)
+    gesture_publisher = rospy.Publisher('/qt_robot/gesture/play', String, queue_size=1)
+    emotion_publisher = rospy.Publisher('/qt_robot/emotion/show', String, queue_size=1)
+
+
 def home(request):
     for key in list(request.session.keys()):
         del request.session[key]
+    if settings.ROBOT_ENABLE:
+        speech_publisher.publish("Hello! Let's play the puzzle game!")
     return render(request, 'home_page.html')
 
 
@@ -32,14 +54,22 @@ def home(request):
 def clear_and_exit(request):
     for key in list(request.session.keys()):
         del request.session[key]
+    if settings.ROBOT_ENABLE:
+        subprocess.call(['rosservice', 'call', '/qt_robot/speech/stop', '{}'])
     return render(request, 'home_page.html')
 
 
 def select_players(request):
+    if settings.ROBOT_ENABLE:
+        subprocess.call(['rosservice', 'call', '/qt_robot/speech/stop', '{}'])
+        speech_publisher.publish("Please select the number of players.")
     return render(request, 'select_players.html')
 
 
 def mode_seletion(request):
+    if settings.ROBOT_ENABLE:
+        subprocess.call(['rosservice', 'call', '/qt_robot/speech/stop', '{}'])
+        speech_publisher.publish("Please select the game mode.")
     return render(request, 'mode_selection.html')
 
 
@@ -50,14 +80,23 @@ def form_team_compete(request):
         request.session['players'] = players
         request.session['mode'] = 'competitive'
         return redirect('puzzle_settings')
+    if settings.ROBOT_ENABLE:
+        subprocess.call(['rosservice', 'call', '/qt_robot/speech/stop', '{}'])
+        speech_publisher.publish("Please enter the names of players.")
     return render(request, 'form_team_competitive.html')
 
 
 def form_team_collaborative_two(request):
+    if settings.ROBOT_ENABLE:
+        subprocess.call(['rosservice', 'call', '/qt_robot/speech/stop', '{}'])
+        speech_publisher.publish("Please enter the names of players.")
     return render(request, 'form_team_collaborative.html', {'count': 2, 'add_flag': False})
 
 
 def form_team_collaborative_single(request):
+    if settings.ROBOT_ENABLE:
+        subprocess.call(['rosservice', 'call', '/qt_robot/speech/stop', '{}'])
+        speech_publisher.publish("Please enter the names of players.")
     return render(request, 'form_team_collaborative.html', {'count': 1, 'add_flag': False})
 
 
@@ -68,6 +107,9 @@ def form_team_collaborative_multi(request):
         request.session['players'] = players
         request.session['mode'] = 'collaborative'
         return redirect('puzzle_settings')
+    if settings.ROBOT_ENABLE:
+        subprocess.call(['rosservice', 'call', '/qt_robot/speech/stop', '{}'])
+        speech_publisher.publish("Please enter the names of players.")
     return render(request, 'form_team_collaborative.html', {'count': 3, 'add_flag': True})
 
 
@@ -78,7 +120,7 @@ def puzzle_settings(request):
     else:
         difficulties = ['Beginner', 'Easy', 'Medium', 'Hard', 'Expert']
     characters = ['Rabbit', 'Cat', 'Dog', 'Tiger', 'Bear']
-    activities = ['School']#, 'Playground', 'Forest']
+    activities = ['School']  # , 'Playground', 'Forest']
     # bg_colors = ['Red', 'Green', 'Blue', 'Yellow']
 
     players = request.session.get('players', [])
@@ -135,6 +177,9 @@ def puzzle_settings(request):
         request.session['total_time'] = total_time
         return redirect('instruction')
 
+    if settings.ROBOT_ENABLE:
+        subprocess.call(['rosservice', 'call', '/qt_robot/speech/stop', '{}'])
+        speech_publisher.publish("Please set your preferences for the puzzles.")
     return render(request, 'puzzle_settings.html', {
         'difficulties': difficulties,
         'characters': characters,
@@ -177,12 +222,15 @@ def instruction(request):
         else:
             return redirect('solve_collab')
 
+    if settings.ROBOT_ENABLE:
+        subprocess.call(['rosservice', 'call', '/qt_robot/speech/stop', '{}'])
+        speech_publisher.publish(message)
+
     return render(request, 'game_instruction.html', {'message': message})
 
 
 @csrf_exempt
 def solve_collab(request, grid=4):
-
     # print(request.method)
 
     players = request.session.get('players', [])
@@ -217,7 +265,8 @@ def solve_collab(request, grid=4):
         height = abs(target_bottom - target_top)
         grid_width = width / grid
         grid_height = height / grid
-        tolerance = min(grid_width, grid_height) * 0.2 # tolerance for slight differences between drop location and target location 
+        tolerance = min(grid_width,
+                        grid_height) * 0.2  # tolerance for slight differences between drop location and target location
         target_row = piece_id // grid
         target_col = np.mod(piece_id, grid)
         print(target_row, target_col, grid_height, grid_width)
@@ -278,6 +327,10 @@ def solve_collab(request, grid=4):
         # print(full_info_list)
         # print(len(full_info_list))
 
+    if settings.ROBOT_ENABLE:
+        subprocess.call(['rosservice', 'call', '/qt_robot/speech/stop', '{}'])
+        speech_publisher.publish("Please drag pieces below and drop them following the patterns shown.")
+
     return render(request, "solve_puzzle_collaborative.html",
                   {'puzzle_config': puzzle_config, 'players': players,
                    'with_ai': with_ai, 'total_time': total_time})
@@ -288,6 +341,10 @@ def solve_collab_ai(request, grid=4):
     # print(request.method)
 
     if request.method == "POST":
+
+        if settings.ROBOT_ENABLE:
+            subprocess.call(['rosservice', 'call', '/qt_robot/speech/stop', '{}'])
+            speech_publisher.publish("My turn!")
 
         piece_full_id = request.POST.get("piece_id")
         piece_id = int(piece_full_id.split('_')[1])
@@ -316,7 +373,7 @@ def solve_collab_ai(request, grid=4):
         index = int(request.POST.get("index"))
         puzzle_id = full_info_list[index][1]  # get puzzle_id
 
-        success = True # AI is always True
+        success = True  # AI is always True
         # rand_float = random.random() # AI can have the probability to be wrong
         # if rand_float < 0.8:
         #     success = True
@@ -367,7 +424,7 @@ def solve_compete(request, grid=4):
 
         piece_full_id = request.POST.get("piece_id")
         print(piece_full_id)
-        piece_id = int(piece_full_id.split('_')[2]) # one more tab name than collab mode
+        piece_id = int(piece_full_id.split('_')[2])  # one more tab name than collab mode
         x = float(request.POST.get("x", 0))
         y = float(request.POST.get("y", 0))
         target_left = float(request.POST.get("target_left", 0))
@@ -441,6 +498,10 @@ def solve_compete(request, grid=4):
         # print(full_info_list)
         # print(len(full_info_list))
 
+    if settings.ROBOT_ENABLE:
+        subprocess.call(['rosservice', 'call', '/qt_robot/speech/stop', '{}'])
+        speech_publisher.publish("Please drag pieces below and drop them following the patterns shown.")
+
     return render(request, "solve_puzzle_competitive.html",
                   {'puzzle_config': puzzle_config, 'players': players,
                    'total_time': total_time})
@@ -454,7 +515,7 @@ def save_personal_record_detail_collab(request):
         with_ai = request.session.get('with_ai', True)
         index = int(request.POST.get("index"))
         action = request.POST.get("action")
-        puzzle_id = full_info_list[index][1] # get puzzle_id
+        puzzle_id = full_info_list[index][1]  # get puzzle_id
 
         if with_ai:
             players.append('AI player')
@@ -470,6 +531,7 @@ def save_personal_record_detail_collab(request):
         return JsonResponse({'status': 'ok'})
     return JsonResponse({'status': 'error', 'message': 'invalid method'})
 
+
 @csrf_exempt
 def save_personal_record_detail_compete(request):
     if request.method == "POST":
@@ -477,7 +539,7 @@ def save_personal_record_detail_compete(request):
         name = request.POST.get("name")
         index = int(request.POST.get("index"))
         action = request.POST.get("action")
-        puzzle_id = full_info_list[index][1] # get puzzle_id
+        puzzle_id = full_info_list[index][1]  # get puzzle_id
 
         PersonalRecordDetail.objects.create(
             name=name,
@@ -543,7 +605,7 @@ def submit_ratings(request):
     if request.method == "POST":
         ai_score = request.session.get('ai_task_score', {})
         # print(ai_score)
-        if ai_score: # already predicted in previous button clicks
+        if ai_score:  # already predicted in previous button clicks
             return JsonResponse({'status': 'ok'})
         request.session['ai_task_score'] = {}
         players = request.session.get('players', [])
@@ -624,7 +686,7 @@ def get_scoring_board(request):
         key=lambda r: (
             -r['correct_piece_amount'],  # high to low
             -r['accuracy'],  # high to low
-            r['time_gap'], # low to high
+            r['time_gap'],  # low to high
         )
     )
 
@@ -636,6 +698,12 @@ def get_scoring_board(request):
         secs = int(seconds % 60)
         record['time_gap'] = f"{mins:02d}:{secs:02d}"
 
+    if settings.ROBOT_ENABLE:
+        subprocess.call(['rosservice', 'call', '/qt_robot/speech/stop', '{}'])
+        speech_publisher.publish("Congratulations! You have completed the puzzle task! Great job!")
+        # gesture_publisher.publish("clap1")
+        gesture_publisher.publish("happy_wide_arms")
+        emotion_publisher.publish("QT/happy")
     if len(players) == 2 and 'AI player' not in players:
         return render(request, "scoring_page_two_players.html", {
             'players': players, 'mode': mode, 'player_records': player_records})
@@ -746,6 +814,11 @@ def view_history(request):
         'players': players,
         'player_records': json.dumps(player_records)}
     print(context)
+
+    if settings.ROBOT_ENABLE:
+        subprocess.call(['rosservice', 'call', '/qt_robot/speech/stop', '{}'])
+        speech_publisher.publish("Please select the name to view the history records.")
+
     return render(request, 'view_history.html', context)
 
 
@@ -762,4 +835,26 @@ def change_mode(request):
     elif mode == 'competitive':
         request.session['mode'] = 'collaborative'
     return redirect('puzzle_settings')
+
+
+@csrf_exempt
+def robot_motivation(request):
+    random.seed(os.urandom(32))
+
+    messages = [
+        "Keep going! You can do it!",
+        "Don't give up! Try again!",
+        "Almost there! Keep trying!"
+    ]
+    msg = random.choice(messages)
+    mode = request.POST.get('mode')
+    name = request.POST.get('name')
+
+    subprocess.call(['rosservice', 'call', '/qt_robot/speech/stop', '{}'])
+    if mode == 'collaboration' and settings.ROBOT_ENABLE:
+        speech_publisher.publish(msg)
+    elif mode == 'competitive' and settings.ROBOT_ENABLE:
+        msg = msg.replace('! ', ' ' + name + '! ')
+        speech_publisher.publish(msg)
+    return JsonResponse({"success": 1})
 

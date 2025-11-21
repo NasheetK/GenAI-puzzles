@@ -25,5 +25,7 @@ urlpatterns = [
     path('view_history/', views.view_history, name='view_history'),
     path('new_puzzle/', views.new_puzzle, name='new_puzzle'),
     path('change_mode/', views.change_mode, name='change_mode'),
+    path('robot_motivation/', views.robot_motivation, name='robot_motivation'),
+
 ]
 
