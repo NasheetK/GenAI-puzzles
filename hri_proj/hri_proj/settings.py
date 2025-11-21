@@ -135,3 +135,35 @@ AUDIO_OTHERS = "Audio2.mp3"
 PUZZLE_PIPELINE = "offline"  # offline or real-time
 ROBOT_ENABLE = False # True or False
 DEMO_ENABLE = True
+
+# Logging configuration to suppress progress polling requests
+import logging
+
+class SuppressProgressPollFilter(logging.Filter):
+    """Filter out progress polling requests from logs"""
+    def filter(self, record):
+        message = record.getMessage()
+        return '/ai/progress/' not in message
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'filters': {
+        'suppress_progress_polls': {
+            '()': SuppressProgressPollFilter,
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'filters': ['suppress_progress_polls'],
+        },
+    },
+    'loggers': {
+        'django.server': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
