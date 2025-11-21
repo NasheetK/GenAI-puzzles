@@ -1,8 +1,10 @@
 import os
 import re
 import time
+import urllib.request
 from pathlib import Path
 from typing import List, Optional
+from urllib.error import URLError, HTTPError
 
 import torch
 from PIL import Image
@@ -36,6 +38,84 @@ _REFINER_PIPE = None
 
 def _normalize_token(s: str) -> str:
     return re.sub(r"[^A-Za-z0-9]+", "", s)
+
+
+def _ensure_lora_downloaded(lora_path: str) -> bool:
+    """
+    Check if the LoRA file exists, and download it from Hugging Face if missing.
+    
+    Args:
+        lora_path: Path to the LoRA file
+        
+    Returns:
+        True if the file exists (or was successfully downloaded), False otherwise
+    """
+    lora_file = Path(lora_path)
+    
+    # If file exists, we're good
+    if lora_file.exists():
+        return True
+    
+    # File doesn't exist, download it
+    print(f"[LORA] LoRA file not found at {lora_path}")
+    print("[LORA] Downloading from Hugging Face...")
+    
+    # Hugging Face URL (use 'resolve' instead of 'blob' for direct download)
+    lora_url = "https://huggingface.co/artificialguybr/StoryBookRedmond/resolve/main/StoryBookRedmond-KidsRedmAF.safetensors"
+    
+    try:
+        # Create parent directories if they don't exist
+        lora_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        print(f"[LORA] Downloading from: {lora_url}")
+        print(f"[LORA] Destination: {lora_file}")
+        
+        # Download with progress indication
+        chunk_size = 8192  # 8KB chunks
+        with urllib.request.urlopen(lora_url) as response:
+            # Get file size from headers
+            total_size = int(response.headers.get('Content-Length', 0))
+            total_size_mb = total_size / (1024 * 1024)
+            
+            print(f"[LORA] File size: {total_size_mb:.2f} MB")
+            print("[LORA] Downloading... (this may take a few minutes)")
+            
+            downloaded = 0
+            with open(lora_file, 'wb') as f:
+                while True:
+                    chunk = response.read(chunk_size)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+                    downloaded += len(chunk)
+                    
+                    # Print progress every 50MB
+                    if downloaded % (50 * 1024 * 1024) < chunk_size:
+                        if total_size > 0:
+                            percent = (downloaded / total_size) * 100
+                            print(f"[LORA] Progress: {percent:.1f}% ({downloaded / (1024*1024):.1f} MB / {total_size_mb:.1f} MB)")
+                        else:
+                            print(f"[LORA] Downloaded: {downloaded / (1024*1024):.1f} MB")
+            
+            print(f"[LORA] ✓ Download complete! File saved to: {lora_file}")
+            return True
+            
+    except HTTPError as e:
+        print(f"[LORA] ✗ HTTP Error {e.code}: {e.reason}")
+        print(f"[LORA] Please download the LoRA file manually from:")
+        print(f"[LORA] {lora_url}")
+        return False
+    except URLError as e:
+        print(f"[LORA] ✗ URL Error: {e.reason}")
+        print(f"[LORA] Please check your internet connection and try again.")
+        print(f"[LORA] Or download the LoRA file manually from:")
+        print(f"[LORA] {lora_url}")
+        return False
+    except Exception as e:
+        print(f"[LORA] ✗ Error downloading LoRA: {str(e)}")
+        print(f"[LORA] Please download the LoRA file manually from:")
+        print(f"[LORA] {lora_url}")
+        return False
 
 
 def _static_img_dir() -> Path:
@@ -165,12 +245,20 @@ def _load_base_pipe(device: str = "cpu"):
         )
 
         # LoRA from workflow: StoryBookRedmond-KidsRedmAF.safetensors with strength 0.6
-        if hasattr(settings, "PUZZLE_LORA_PATH") and os.path.exists(settings.PUZZLE_LORA_PATH):
-            pipe.load_lora_weights(settings.PUZZLE_LORA_PATH)
-            try:
-                pipe.set_adapters("default", weight=0.6)
-            except Exception:
-                pass
+        if hasattr(settings, "PUZZLE_LORA_PATH"):
+            # Ensure LoRA file exists, download if missing
+            if _ensure_lora_downloaded(settings.PUZZLE_LORA_PATH):
+                try:
+                    pipe.load_lora_weights(settings.PUZZLE_LORA_PATH)
+                    try:
+                        pipe.set_adapters("default", weight=0.6)
+                    except Exception:
+                        pass
+                    print("[BASE PIPE] LoRA loaded successfully")
+                except Exception as e:
+                    print(f"[BASE PIPE] Warning: Could not load LoRA weights: {e}")
+            else:
+                print("[BASE PIPE] Warning: LoRA file not available, continuing without LoRA")
 
         # Test CUDA first if requested
         if device == "cuda":
