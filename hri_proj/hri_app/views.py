@@ -29,6 +29,7 @@ import json
 if settings.ROBOT_ENABLE:
     import rospy
     from std_msgs.msg import String
+    from qt_robot_interface.srv import audio_play, audio_playRequest
     import subprocess
     import time
 
@@ -42,10 +43,20 @@ if settings.ROBOT_ENABLE:
     emotion_publisher = rospy.Publisher('/qt_robot/emotion/show', String, queue_size=1)
 
 
+    def robot_bgm(audio_file):
+        rospy.wait_for_service('/qt_robot/audio/play')
+        audio_service = rospy.ServiceProxy('/qt_robot/audio/play', audio_play)
+        audio_req = audio_playRequest()
+        audio_req.filename = audio_file
+        audio_service(audio_req)
+
+
 def home(request):
     for key in list(request.session.keys()):
         del request.session[key]
     if settings.ROBOT_ENABLE:
+        robot_bgm(
+            '/home/qtrobot/Desktop/SizheNasheet/social_robotics/social_robotics/hri_proj/hri_app/static/audio/' + settings.AUDIO_OTHERS)
         speech_publisher.publish("Hello! Let's play the puzzle game!")
     return render(request, 'home_page.html')
 
@@ -704,10 +715,19 @@ def get_scoring_board(request):
         # gesture_publisher.publish("clap1")
         gesture_publisher.publish("happy_wide_arms")
         emotion_publisher.publish("QT/happy")
+
+    print(players)
+    print(len(players) == 2 and 'AI player' not in players)
     if len(players) == 2 and 'AI player' not in players:
+        # print(111)
+        return render(request, "scoring_page_two_players.html", {
+            'players': players, 'mode': mode, 'player_records': player_records})
+    if len(players) == 3 and 'AI player' in players and mode == 'collaborative':
+        # print(111)
         return render(request, "scoring_page_two_players.html", {
             'players': players, 'mode': mode, 'player_records': player_records})
     else:
+        # print(222)
         return render(request, "scoring_page_multi_players.html", {
             'players': players, 'mode': mode, 'player_records': player_records})
 
@@ -737,7 +757,6 @@ def submit_personal_record_general(request):
 
         related_records, time_start, time_end, time_gap = get_records_from_db(name, puzzle_id_list)
         print(related_records)
-        # related_records = [[{'detail_id': 1, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '1', 'action': 'piece_matched', 'timestamp': 1762415080363}, {'detail_id': 3, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '11', 'action': 'piece_matched', 'timestamp': 1762415094686}, {'detail_id': 10, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '5', 'action': 'piece_matched', 'timestamp': 1762415105754}, {'detail_id': 12, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '12', 'action': 'piece_matched', 'timestamp': 1762415110098}, {'detail_id': 14, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '8', 'action': 'piece_matched', 'timestamp': 1762415114872}, {'detail_id': 16, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '15', 'action': 'piece_wrong', 'timestamp': 1762415118464}, {'detail_id': 17, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '15', 'action': 'piece_wrong', 'timestamp': 1762415121228}, {'detail_id': 18, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '15', 'action': 'piece_wrong', 'timestamp': 1762415123025}, {'detail_id': 19, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '15', 'action': 'piece_matched', 'timestamp': 1762415124238}, {'detail_id': 21, 'name': '2', 'puzzle_id': '168084765247767603248428953314615025711', 'piece_id': '-1', 'action': 'completed', 'timestamp': 1762415125274}], [{'detail_id': 22, 'name': '2', 'puzzle_id': '167256899826066747807738590047242329404', 'piece_id': '-1', 'action': 'start', 'timestamp': 1762415127480}, {'detail_id': 23, 'name': '2', 'puzzle_id': '167256899826066747807738590047242329404', 'piece_id': '13', 'action': 'piece_wrong', 'timestamp': 1762415130507}, {'detail_id': 24, 'name': '2', 'puzzle_id': '167256899826066747807738590047242329404', 'piece_id': '-1', 'action': 'terminated', 'timestamp': 1762415297530}], [], [], [], []]
 
         for record_list in related_records:
             for record in record_list:

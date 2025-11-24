@@ -128,7 +128,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # General settings for the game
 AUDIO_PUZZLE = "Audio1.mp3"
+AUDIO_PUZZLE_PATH = "static/audio/Audio1.mp3"
 AUDIO_OTHERS = "Audio2.mp3"
+AUDIO_OTHERS_PATH = "static/audio/Audio2.mp3"
 PUZZLE_PIPELINE = "offline"  # offline or real-time
 ROBOT_ENABLE = False # True or False
 DEMO_ENABLE = True
