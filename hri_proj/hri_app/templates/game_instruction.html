@@ -50,6 +50,11 @@
       <button type="submit" class="montessori-btn montessori-btn-green">Start Puzzle</button>
     </form>
 
+    <form id="view_tutorial" onsubmit="openTutorial(event)">
+      {% csrf_token %}
+      <button type="submit" class="montessori-btn montessori-btn-orange">View Tutorial</button>
+    </form>
+
     <form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
       <button type="submit" class="montessori-btn montessori-btn-red">Exit</button>
     </form>
@@ -112,6 +117,17 @@
 
     // update icon again when audio loads
     audio.addEventListener("loadeddata", updateIcon);
+    function openTutorial(e) {
+        e.preventDefault();  // Stop form from navigating away
+        const videoUrl = "{% url 'view_tutorial' %}";
+
+        // Open small popup window
+        window.open(
+            videoUrl,
+            "tutorialWindow",
+            "width=720,height=480,toolbar=0,menubar=0,scrollbars=0,resizable=1"
+        );
+    }
   </script>
 </body>
 </html>

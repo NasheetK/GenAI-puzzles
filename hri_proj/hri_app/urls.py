@@ -26,6 +26,7 @@ urlpatterns = [
     path('new_puzzle/', views.new_puzzle, name='new_puzzle'),
     path('change_mode/', views.change_mode, name='change_mode'),
     path('robot_motivation/', views.robot_motivation, name='robot_motivation'),
+    path('view_tutorial/', views.view_tutorial, name='view_tutorial'),
 
 ]
 

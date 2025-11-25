@@ -60,7 +60,7 @@ def get_amount_and_time(mode, num_players, difficulty_level, with_ai):
             return results[0], results[1] * (1 - scaling)
         else:
             scaling = num_players // 2
-            1 - (0.25 / scaling)
+            # 1 - (0.25 / scaling)
             return results[0], results[1] * (1 - (0.25 / scaling))
 
 

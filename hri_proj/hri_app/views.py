@@ -877,3 +877,7 @@ def robot_motivation(request):
         speech_publisher.publish(msg)
     return JsonResponse({"success": 1})
 
+
+def view_tutorial(request):
+    return render(request, "tutorial_page.html")
+
