@@ -130,11 +130,16 @@
 
     const audio = document.getElementById("bg-audio");
     // Key used to store time for audio_others
-    const KEY = "audio_others_time";
+    const TIME_KEY = "audio_others_time";
+    const MUTE_KEY = "audio_others_muted";
     // --- Restore position when showing page ---
     function resumeAudio() {
-      const savedTime = localStorage.getItem(KEY);
+      const savedTime = localStorage.getItem(TIME_KEY);
+      const savedMute = localStorage.getItem(MUTE_KEY);
       if (savedTime) audio.currentTime = parseFloat(savedTime);
+      if (savedMute != null) {
+        audio.muted = savedMute === "true";
+      }
       audio.play().catch(() => {});
       updateIcon();
     }
@@ -142,7 +147,7 @@
 
     // --- Save position before leaving page ---
     window.addEventListener("beforeunload", () => {
-      localStorage.setItem(KEY, audio.currentTime.toString());
+      localStorage.setItem(TIME_KEY, audio.currentTime.toString());
     });
 
     const muteBtn = document.getElementById("mute-btn");
@@ -154,6 +159,7 @@
 
     muteBtn.addEventListener("click", () => {
         audio.muted = !audio.muted;
+        localStorage.setItem(MUTE_KEY, audio.muted.toString());
         updateIcon();
     });
 
