@@ -98,14 +98,14 @@
               <input type="range" 
                      id="device-slider" 
                      min="0" 
-                     max="1" 
-                     value="{% if form.device.value == 'cuda' %}1{% else %}0{% endif %}"
+                     max="{% if cuda_available %}1{% else %}0{% endif %}" 
+                     value="{% if form.device.value == 'cuda' and cuda_available %}1{% else %}0{% endif %}"
                      oninput="updateDeviceSelection(this)"
-                     style="flex: 1; max-width: 300px;"
-                     {% if not cuda_available %}disabled{% endif %}>
-              <span style="font-size: 0.9em;">CUDA</span>
+                     style="flex: 1; max-width: 300px;{% if not cuda_available %} opacity: 0.6;{% endif %}"
+                     {% if not cuda_available %}title="CUDA not available - using CPU only"{% endif %}>
+              <span style="font-size: 0.9em;{% if not cuda_available %} opacity: 0.5;{% endif %}">CUDA{% if not cuda_available %} (N/A){% endif %}</span>
               <span id="device-display" style="font-weight: bold; min-width: 60px; text-align: center;">
-                {% if form.device.value == 'cuda' %}CUDA{% else %}CPU{% endif %}
+                {% if form.device.value == 'cuda' and cuda_available %}CUDA{% else %}CPU{% endif %}
               </span>
             </div>
             <select name="{{ form.device.name }}" id="{{ form.device.id_for_label }}" style="display: none;">
@@ -168,8 +168,16 @@
           const display = document.getElementById('device-display');
           const value = parseInt(slider.value);
           
-          select.selectedIndex = value;
-          display.textContent = select.options[value].text;
+          // Ensure we don't go out of bounds
+          if (value >= 0 && value < select.options.length) {
+            select.selectedIndex = value;
+            display.textContent = select.options[value].text;
+          } else {
+            // Fallback to CPU if index is invalid
+            select.selectedIndex = 0;
+            display.textContent = select.options[0].text;
+            slider.value = 0;
+          }
         }
         
         function formatTime(seconds) {
