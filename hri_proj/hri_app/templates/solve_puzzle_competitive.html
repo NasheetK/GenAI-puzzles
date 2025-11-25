@@ -443,9 +443,9 @@
     items.forEach(item=>{
       if(item.dataset.bound==="1") return;
       item.dataset.bound="1";
-      // Helper function to start dragging
-      const startDrag = (clientX, clientY) => {
+      item.addEventListener("mousedown", e=>{
         if(item.classList.contains("locked")) return;
+        e.preventDefault();
         current_item=item;
         const rect=item.getBoundingClientRect();
         placeholder=document.createElement("div");
@@ -457,21 +457,9 @@
         item.style.left=rect.left+"px";
         item.style.top=rect.top+"px";
         item.style.zIndex=9999;
-        offsetX=clientX-rect.left;
-        offsetY=clientY-rect.top;
-      };
-
-      item.addEventListener("mousedown", e=>{
-        e.preventDefault();
-        startDrag(e.clientX, e.clientY);
+        offsetX=e.clientX-rect.left;
+        offsetY=e.clientY-rect.top;
       });
-
-      // Touch event support for touchscreens
-      item.addEventListener("touchstart", e=>{
-        e.preventDefault();
-        const touch = e.touches[0];
-        startDrag(touch.clientX, touch.clientY);
-      }, { passive: false });
     });
   }
 
@@ -480,15 +468,6 @@
     current_item.style.left=e.clientX-offsetX+"px";
     current_item.style.top=e.clientY-offsetY+"px";
   });
-
-  // Touch move handler - prevent default to stop page scrolling
-  document.addEventListener("touchmove", e=>{
-    if(!current_item) return;
-    e.preventDefault(); // Prevent page scrolling while dragging
-    const touch = e.touches[0];
-    current_item.style.left=touch.clientX-offsetX+"px";
-    current_item.style.top=touch.clientY-offsetY+"px";
-  }, { passive: false });
 
   document.addEventListener("mouseup", async e=>{
     if(!current_item) return;
@@ -545,64 +524,6 @@
     current_item=null;
     placeholder=null;
   });
-
-  // Touch end handler for touchscreens
-  document.addEventListener("touchend", async e=>{
-    if(!current_item) return;
-    e.preventDefault();
-    const prefix = current_item.id.startsWith("p1_")?"p1":"p2";
-    const tab_id=current_item.dataset.tab;
-    if(tab_id===undefined||tab_id===null||tab_id===""){
-      console.error("Piece missing data-tab attribute:", current_item);
-      resetPiece(); return;
-    }
-    const dropzone=document.getElementById(`${prefix}_tab${tab_id}_dropzone`);
-    if(!dropzone){ console.error("Dropzone not found:", `${prefix}_tab${tab_id}_dropzone`); resetPiece(); return; }
-
-    const piece_pos=current_item.getBoundingClientRect();
-    const dropzone_pos=dropzone.getBoundingClientRect();
-    const scrollX=window.scrollX||0, scrollY=window.scrollY||0;
-
-    const fd=new FormData();
-    fd.append("index",tab_id);
-    fd.append("name",prefix==="p1"?players[0]:players[1]);
-    fd.append("piece_id",current_item.id);
-    fd.append("x",piece_pos.left+scrollX);
-    fd.append("y",piece_pos.top+scrollY);
-    fd.append("target_left",dropzone_pos.left+scrollX);
-    fd.append("target_top",dropzone_pos.top+scrollY);
-    fd.append("target_right",dropzone_pos.right+scrollX);
-    fd.append("target_bottom",dropzone_pos.bottom+scrollY);
-
-    try{
-      const res=await fetch("{% url 'solve_compete' %}", {method:"POST", body:fd});
-      const data=await res.json();
-      if(data.success){
-        const dx=data.correct_x-(dropzone_pos.left+scrollX);
-        const dy=data.correct_y-(dropzone_pos.top+scrollY);
-        if(placeholder && placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
-        current_item.style.position="absolute";
-        current_item.style.left=dx+"px";
-        current_item.style.top=dy+"px";
-        current_item.style.zIndex=2;
-        current_item.classList.add("locked");
-        dropzone.appendChild(current_item);
-
-        if (prefix === "p1") {
-            if (idle_timer_p1) clearInterval(idle_timer_p1);
-            startIdleTimer("p1");
-        } else {
-            if (idle_timer_p2) clearInterval(idle_timer_p2);
-            startIdleTimer("p2");
-        }
-        checkPuzzleComplete(prefix, tab_id);
-
-      } else { resetPiece(); }
-    }catch(err){ console.error(err); resetPiece(); }
-
-    current_item=null;
-    placeholder=null;
-  }, { passive: false });
 
   function resetPiece(){
     if(placeholder && placeholder.parentNode) placeholder.parentNode.replaceChild(current_item,placeholder);
