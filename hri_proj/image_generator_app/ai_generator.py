@@ -231,9 +231,18 @@ def _load_base_pipe(device: str = "cpu"):
     base_model_id = getattr(
         settings, "SDXL_BASE_ID", "stabilityai/stable-diffusion-xl-base-1.0"
     )
+    
+    # Get models cache directory from settings (defaults to project models folder)
+    models_cache_dir = getattr(settings, "MODELS_CACHE_DIR", None)
+    if models_cache_dir:
+        models_cache_dir = Path(models_cache_dir)
+        models_cache_dir.mkdir(parents=True, exist_ok=True)
+        print(f"[BASE PIPE] Using custom models cache directory: {models_cache_dir}")
 
     scheduler = EulerDiscreteScheduler.from_pretrained(
-        base_model_id, subfolder="scheduler"
+        base_model_id, 
+        subfolder="scheduler",
+        cache_dir=str(models_cache_dir) if models_cache_dir else None,
     )
     
     try:
@@ -242,6 +251,7 @@ def _load_base_pipe(device: str = "cpu"):
             torch_dtype=torch.float16 if device == "cuda" else torch.float32,
             use_safetensors=True,
             scheduler=scheduler,
+            cache_dir=str(models_cache_dir) if models_cache_dir else None,
         )
 
         # LoRA from workflow: StoryBookRedmond-KidsRedmAF.safetensors with strength 0.6
@@ -342,9 +352,18 @@ def _load_refiner_pipe(device: str = "cpu"):
     refiner_model_id = getattr(
         settings, "SDXL_REFINER_ID", "stabilityai/stable-diffusion-xl-refiner-1.0"
     )
+    
+    # Get models cache directory from settings (defaults to project models folder)
+    models_cache_dir = getattr(settings, "MODELS_CACHE_DIR", None)
+    if models_cache_dir:
+        models_cache_dir = Path(models_cache_dir)
+        models_cache_dir.mkdir(parents=True, exist_ok=True)
+        print(f"[REFINER PIPE] Using custom models cache directory: {models_cache_dir}")
 
     scheduler = EulerDiscreteScheduler.from_pretrained(
-        refiner_model_id, subfolder="scheduler"
+        refiner_model_id, 
+        subfolder="scheduler",
+        cache_dir=str(models_cache_dir) if models_cache_dir else None,
     )
     
     try:
@@ -352,6 +371,7 @@ def _load_refiner_pipe(device: str = "cpu"):
             refiner_model_id,
             torch_dtype=torch.float16 if device == "cuda" else torch.float32,
             use_safetensors=True,
+            cache_dir=str(models_cache_dir) if models_cache_dir else None,
             scheduler=scheduler,
         )
         

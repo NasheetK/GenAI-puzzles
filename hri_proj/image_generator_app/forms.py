@@ -1,9 +1,13 @@
 from django import forms
-import torch
 
 def is_cuda_available():
     """Check if CUDA is available (even if there are compatibility warnings)."""
-    return torch.cuda.is_available()
+    try:
+        import torch
+        return torch.cuda.is_available()
+    except ImportError:
+        # torch not installed, CUDA not available
+        return False
 
 class PuzzlePromptForm(forms.Form):
     CHARACTER_CHOICES = [
