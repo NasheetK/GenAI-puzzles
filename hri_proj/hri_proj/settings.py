@@ -15,7 +15,9 @@ import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+SDXL_BASE_ID = "stabilityai/stable-diffusion-xl-base-1.0"
+SDXL_REFINER_ID = "stabilityai/stable-diffusion-xl-refiner-1.0"
+PUZZLE_LORA_PATH = os.path.join(BASE_DIR, "..", "models", "loras", "StoryBookRedmond-KidsRedmAF.safetensors")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -39,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'hri_app',
+    "image_generator_app",
 ]
 
 MIDDLEWARE = [
@@ -134,3 +137,35 @@ AUDIO_OTHERS_PATH = "static/audio/Audio2.mp3"
 PUZZLE_PIPELINE = "offline"  # offline or real-time
 ROBOT_ENABLE = False # True or False
 DEMO_ENABLE = True
+
+# Logging configuration to suppress progress polling requests
+import logging
+
+class SuppressProgressPollFilter(logging.Filter):
+    """Filter out progress polling requests from logs"""
+    def filter(self, record):
+        message = record.getMessage()
+        return '/ai/progress/' not in message
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'filters': {
+        'suppress_progress_polls': {
+            '()': SuppressProgressPollFilter,
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'filters': ['suppress_progress_polls'],
+        },
+    },
+    'loggers': {
+        'django.server': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}

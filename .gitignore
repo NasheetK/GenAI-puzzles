@@ -1,5 +1,7 @@
 venv/
 hri_proj/hri_app/static/puzzles/
+hri_proj/staticfiles/puzzles/
+models/
 __pycache__/
 *.py[cod]
 *$py.class
@@ -22,3 +24,11 @@ venv.bak/
 .DS_Store
 Thumbs.db
 
+
+
+.cursor/rules/kluster-code-verify.mdc
+.kluster
+
+# Large model files
+models/loras/
+*.safetensors
