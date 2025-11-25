@@ -18,6 +18,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SDXL_BASE_ID = "stabilityai/stable-diffusion-xl-base-1.0"
 SDXL_REFINER_ID = "stabilityai/stable-diffusion-xl-refiner-1.0"
 PUZZLE_LORA_PATH = os.path.join(BASE_DIR, "..", "models", "loras", "StoryBookRedmond-KidsRedmAF.safetensors")
+# Models cache directory - stores SDXL base and refiner models
+MODELS_CACHE_DIR = os.path.join(BASE_DIR, "..", "models")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
