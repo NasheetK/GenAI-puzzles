@@ -85,8 +85,8 @@
     }
 
     .piece.highlighted {
-      outline: 8px solid red;       /* thicker, bright border */
-      box-shadow: 0 0 10px 3px red; /* glowing effect around the piece */
+      outline: 8px solid yellow;       /* thicker, bright border */
+      box-shadow: 0 0 10px 3px yellow; /* glowing effect around the piece */
       transition: all 0.2s ease;       /* smooth appearance */
       z-index: 9999;                   /* ensure it’s on top */
     }
@@ -115,7 +115,6 @@
       position: relative;
     }
 
-    /* Small cosmetic container so the timer/tabs/buttons sit nicely within your theme */
     .game-shell { max-width: 1100px; margin: 0 auto; }
     .game-header { text-align:center; margin: 8px 0; }
     .actions { display:grid; gap:10px; max-width:360px; margin: 12px auto; }
@@ -140,6 +139,32 @@
     .mute-toggle:hover {
         background: #f2f2f2;
     }
+
+    .score-box {
+        font-size: 40px;                 /* same as timer */
+        line-height: 1;                   /* match timer spacing */
+        font-family: inherit;             /* match timer font */
+        font-weight: 400;                 /* same weight as timer */
+        padding: 20px 30px;               /* same as timer */
+        background: white;                /* same background */
+        border-radius: 20px;               /* same rounded corners */
+        box-shadow: 0 6px 18px rgba(0,0,0,0.08); /* same shadow */
+        display: flex;                    /* align content like timer */
+        align-items: center;
+        justify-content: center;
+    }
+    .score-box span {
+        font-size: inherit;       /* match parent font size */
+        font-weight: inherit;     /* match parent font weight */
+    }
+
+    .stats-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 30px;          /* space between timer and score */
+        margin: 8px 0;
+    }
   </style>
 </head>
 <body class="montessori-bg">
@@ -148,7 +173,14 @@
     <h1 class="montessori-heading game-header">Solve the Puzzles</h1>
 <!--    <p class="game-header">Drag pieces below and drop them following the patterns shown.</p>-->
 
-    <div class="timer" id="timer">00:00</div>
+<!--    <div class="timer" id="timer">00:00</div>-->
+<!--    <div class="score-box" id="score-box">-->
+<!--      Score: <span id="score-value">0</span>-->
+<!--    </div>-->
+    <div class="stats-row">
+        <div class="timer" id="timer">00:00</div>
+        <div class="score-box">Score: <span id="score-value">0</span></div>
+    </div>
     <h2 id="current-player" style="text-align:center; margin-bottom:10px; color:#4b5563;">Current Player: —</h2>
 
     <div class="tab">
@@ -250,7 +282,7 @@
     const audio = document.getElementById("bg-audio");
     // Key used to store time for audio_others
     const TIME_KEY = "audio_puzzle_time";
-    const MUTE_KEY = "audio_puzzle_muted";
+    const MUTE_KEY = "audio_muted";
     // --- Restore position when showing page ---
     function resumeAudio() {
       const savedTime = localStorage.getItem(TIME_KEY);
@@ -303,6 +335,7 @@
   let puzzle_count = 0;
   let completed = [];
   let current_tab = 0;
+  let score = 0;
 
   // drag state
   let offsetX = 0, offsetY = 0;
@@ -317,7 +350,7 @@
   let timer_interval = null;
   let turn_locked = false;
   let idle_timer = null;
-  const IDLE_LIMIT = 10; // seconds
+  const IDLE_LIMIT = 30; // seconds
 
   function startIdleTimer() {
     if (idle_timer) clearInterval(idle_timer);
@@ -679,6 +712,11 @@
     dropPiece(touch.clientX, touch.clientY);
   });
 
+  function updateScore() {
+      score += 1;
+      document.getElementById("score-value").textContent = score;
+  }
+
   async function dropPiece(clientX, clientY) {
       if (!current_item || turn_locked) return;
       turn_locked = true;
@@ -727,6 +765,7 @@
 
               current_player_idx = (current_player_idx + 1) % players.length;
               turn_locked = false;
+              updateScore();
               switchToNextPlayer();
               await checkPuzzleComplete(current_tab);
 
@@ -824,6 +863,7 @@
         ai_piece.style.zIndex = 2;
         ai_piece.classList.add("locked");
         dropzone.appendChild(ai_piece);
+        updateScore();
 
         await checkPuzzleComplete(current_tab);
 

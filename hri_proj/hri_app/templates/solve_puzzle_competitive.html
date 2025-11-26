@@ -122,7 +122,10 @@
 
     <!-- Player 1 -->
     <div class="player-area">
-      <h2>{{ players.0 }}</h2>
+      <h2 id="player0-score-area">
+        {{ players.0 }} - score:<span id="player0-score">0</span>
+      </h2>
+<!--      <h2>{{ players.0 }}</h2>-->
       <div class="tab" id="tabs_p1">
         {% for img, img_id, pieces in puzzle_config.full_info_list %}
           <button class="tablinks" data-player="p1" data-index="{{ forloop.counter0 }}">
@@ -160,7 +163,10 @@
 
     <!-- Player 2 -->
     <div class="player-area">
-      <h2>{{ players.1 }}</h2>
+      <h2 id="player1-score-area">
+        {{ players.1 }} - score:<span id="player1-score">0</span>
+      </h2>
+<!--      <h2>{{ players.1 }}</h2>-->
       <div class="tab" id="tabs_p2">
         {% for img, img_id, pieces in puzzle_config.full_info_list %}
           <button class="tablinks" data-player="p2" data-index="{{ forloop.counter0 }}">
@@ -239,7 +245,7 @@
   const audio = document.getElementById("bg-audio");
     // Key used to store time for audio_others
     const TIME_KEY = "audio_puzzle_time";
-    const MUTE_KEY = "audio_puzzle_muted";
+    const MUTE_KEY = "audio_muted";
     // --- Restore position when showing page ---
     function resumeAudio() {
       const savedTime = localStorage.getItem(TIME_KEY);
@@ -284,9 +290,11 @@
   let remaining_seconds = Math.round(start_minutes * 60);
   let timer_interval=null;
   const next_url = "{% url 'get_scoring_board' %}";
-  const IDLE_LIMIT = 10; // seconds
+  const IDLE_LIMIT = 30; // seconds
   let idle_timer_p1 = null;
   let idle_timer_p2 = null;
+  let player0_score = 0;
+  let player1_score = 0;
 
   function startIdleTimer(prefix) {
     if(prefix === "p1" && idle_timer_p1) clearInterval(idle_timer_p1);
@@ -352,6 +360,17 @@
       console.error("Error sending record:", err);
     }
   }
+
+  function updateScore(playerName) {
+    if (playerName === "p1") {
+      player0_score += 1;
+      document.getElementById("player0-score").textContent = player0_score;
+    } else {
+      player1_score += 1;
+      document.getElementById("player1-score").textContent = player1_score;
+    }
+  }
+
 
   document.addEventListener("DOMContentLoaded",()=>{
     try { full_info_list=JSON.parse(document.getElementById("puzzle-data").textContent); }
@@ -726,7 +745,7 @@
 
               if(prefix === "p1") { if(idle_timer_p1) clearInterval(idle_timer_p1); startIdleTimer("p1"); }
               else { if(idle_timer_p2) clearInterval(idle_timer_p2); startIdleTimer("p2"); }
-
+              updateScore(prefix);
               checkPuzzleComplete(prefix, tab_id);
           } else { resetPiece(); }
       } catch(err) { console.error(err); resetPiece(); }

@@ -72,12 +72,12 @@
             <th>Game Mode</th>
             <th>Difficulty</th>
             <th>With AI</th>
-            <th>Puzzle Amount</th>
+            <th>Number of Puzzles</th>
             <th>Start Time</th>
             <th>End Time</th>
-            <th>Puzzle Solved Amount</th>
-            <th>Correct Piece Amount</th>
-            <th>Wrong Piece Amount</th>
+            <th>Number of Solved Puzzles</th>
+            <th>Number of Correct Attempts</th>
+            <th>Number of Inorrect Attempts</th>
             <th>Accuracy</th>
           </tr>
         </thead>
@@ -115,7 +115,7 @@
     const audio = document.getElementById("bg-audio");
     // Key used to store time for audio_others
     const TIME_KEY = "audio_others_time";
-    const MUTE_KEY = "audio_others_muted";
+    const MUTE_KEY = "audio_muted";
     // --- Restore position when showing page ---
     function resumeAudio() {
       const savedTime = localStorage.getItem(TIME_KEY);

@@ -131,7 +131,7 @@ def puzzle_settings(request):
     else:
         difficulties = ['Beginner', 'Easy', 'Medium', 'Hard', 'Expert']
     characters = ['Rabbit', 'Cat', 'Dog', 'Tiger', 'Bear']
-    activities = ['School']  # , 'Playground', 'Forest']
+    activities = ['School', 'Playground', 'Forest']
     # bg_colors = ['Red', 'Green', 'Blue', 'Yellow']
 
     players = request.session.get('players', [])
@@ -354,8 +354,16 @@ def solve_collab_ai(request, grid=4):
     if request.method == "POST":
 
         if settings.ROBOT_ENABLE:
+            messages = [
+                "I’m stepping in!",
+                "My time to play!",
+                "I’m taking the next move!",
+                "Here I go!",
+                "Let me try this one!"
+            ]
+            msg = random.choice(messages)
             subprocess.call(['rosservice', 'call', '/qt_robot/speech/stop', '{}'])
-            speech_publisher.publish("My turn!")
+            speech_publisher.publish(msg)
 
         piece_full_id = request.POST.get("piece_id")
         piece_id = int(piece_full_id.split('_')[1])
