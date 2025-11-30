@@ -90,7 +90,10 @@
 
       <form id="view_history" method="POST" action="{% url 'view_history' %}">
         {% csrf_token %}
-        <button type="submit" class="montessori-btn montessori-btn-blue">View History</button>
+        <button type="submit" class="montessori-btn montessori-btn-blue button-with-icon">
+          <img src="{% static 'icons/History.png' %}" alt="History" class="button-icon">
+          View History
+        </button>
       </form>
 
       <form id="new_puzzle" method="POST" action="{% url 'new_puzzle' %}">
@@ -99,7 +102,10 @@
       </form>
 
       <form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
-        <button type="submit" class="montessori-btn montessori-btn-red">Exit</button>
+        <button type="submit" class="montessori-btn montessori-btn-red button-with-icon">
+          <img src="{% static 'icons/Exit.png' %}" alt="Exit" class="button-icon">
+          Exit
+        </button>
       </form>
     </div>
   </div>

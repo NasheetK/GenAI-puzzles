@@ -23,7 +23,7 @@ button, .btn, a[role="button"], input[type="submit"]{
   display:inline-flex; align-items:center; justify-content:center; gap:.8ch;
   min-height:60px; padding:16px 24px;
   border:0; border-radius:999px;
-  background:var(--brand); color:#2b303a;
+  background:var(--brand); color:#ffffff;
   font-weight:1000; font-size:20px; letter-spacing:.2px;
   cursor:pointer; text-decoration:none;
   box-shadow:0 10px 0 rgba(0,0,0,.07);

@@ -66,7 +66,7 @@ button, .btn, .montessori-btn, a[role="button"], input[type="submit"]{
   display:inline-flex; align-items:center; justify-content:center; gap:.8ch;
   min-height:60px; padding:16px 24px;
   border:0; border-radius:999px;
-  background:var(--brand); color:#2b303a;
+  background:var(--brand); color:#ffffff;
   font-weight:1000; font-size:20px; letter-spacing:.2px;
   cursor:pointer; text-decoration:none;
   box-shadow:0 10px 0 rgba(0,0,0,.07);
@@ -88,9 +88,9 @@ button[data-icon]::before, .btn[data-icon]::before, .montessori-btn[data-icon]::
 }
 
 /* Theme color variants (use these class names in your HTML) */
-.montessori-btn-gold{   background:var(--brand);  color:#2b303a } /* default gold */
-.montessori-btn-green{  background:var(--brand-2); color:#083b2a }
-.montessori-btn-blue{   background:var(--blue);   color:#0b2551 }
+.montessori-btn-gold{   background:var(--brand);  color:#ffffff } /* default gold */
+.montessori-btn-green{  background:var(--brand-2); color:#ffffff }
+.montessori-btn-blue{   background:var(--blue);   color:#ffffff }
 .montessori-btn-purple{ background:var(--purple); color:#ffffff }
 .montessori-btn-red{    background:var(--brand-3); color:#ffffff } /* for warnings */
 
@@ -217,12 +217,59 @@ input[type="radio"]:checked + .emoji-label{
 
 /* === Global spacing improvement for forms and buttons === */
 .stack-buttons > * + * {
-  margin-top: 28px; /* increase space between stacked elements */
+  margin-top: 28px; /* consistent space between stacked elements */
 }
 
-/* Add a bit more breathing room between form fields */
+/* Ensure forms with only buttons don't get extra spacing */
+.stack-buttons form {
+  margin-top: 0; /* Reset form margin - parent handles spacing */
+}
+
+.stack-buttons form + form {
+  margin-top: 28px; /* Consistent spacing between button forms */
+}
+
+/* Add a bit more breathing room between form fields (but not buttons) */
 form > * + * {
   margin-top: 20px;
+}
+
+/* Override form spacing for buttons - buttons should use parent spacing */
+form > button.montessori-btn,
+form > .montessori-btn,
+form > input[type="submit"],
+form > .button-group {
+  margin-top: 0; /* Let parent handle spacing */
+}
+
+/* Button icon styling - icons appear to the left of buttons */
+.button-icon {
+  height: 60px; /* Match button min-height */
+  width: auto;
+  margin-right: 12px;
+  vertical-align: middle;
+  object-fit: contain;
+}
+
+/* Icon wrapper for buttons - flex container */
+.button-with-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* AI checkbox icon styling */
+.ai-checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ai-checkbox-icon {
+  height: 60px; /* Match button height */
+  width: auto;
+  vertical-align: middle;
+  object-fit: contain;
 }
 
 /* Add extra gap below labels and selects */

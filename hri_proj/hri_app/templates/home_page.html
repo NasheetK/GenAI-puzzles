@@ -46,7 +46,10 @@
     <h1 class="montessori-heading">Puzzle Game</h1>
 
     <form action="{% url 'select_players' %}">
-      <button type="submit" class="montessori-btn montessori-btn-green">Start</button>
+      <button type="submit" class="montessori-btn montessori-btn-green button-with-icon">
+        <img src="{% static 'icons/Start.png' %}" alt="Start" class="button-icon">
+        Start
+      </button>
     </form>
 
   </div>

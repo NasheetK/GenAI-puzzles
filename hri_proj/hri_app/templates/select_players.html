@@ -44,15 +44,24 @@
     <h1 class="montessori-heading">Puzzle Game</h1>
 
     <form action="{% url 'form_team_collaborative_single' %}">
-      <button type="submit" class="montessori-btn montessori-btn-green">Single Player</button>
+      <button type="submit" class="montessori-btn montessori-btn-green button-with-icon">
+        <img src="{% static 'icons/Single Player.png' %}" alt="Single Player" class="button-icon">
+        Single Player
+      </button>
     </form>
 
     <form action="{% url 'mode_selection' %}">
-      <button type="submit" class="montessori-btn montessori-btn-blue">Two Players</button>
+      <button type="submit" class="montessori-btn montessori-btn-blue button-with-icon">
+        <img src="{% static 'icons/2 Players.png' %}" alt="Two Players" class="button-icon">
+        Two Players
+      </button>
     </form>
 
     <form action="{% url 'form_team_collaborative_multi' %}">
-      <button type="submit" class="montessori-btn montessori-btn-purple">More Players</button>
+      <button type="submit" class="montessori-btn montessori-btn-purple button-with-icon">
+        <img src="{% static 'icons/Multiplayer.png' %}" alt="More Players" class="button-icon">
+        More Players
+      </button>
     </form>
   </div>
     <button id="mute-btn" class="mute-toggle">🔊</button>

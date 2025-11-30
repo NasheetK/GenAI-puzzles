@@ -49,10 +49,24 @@
     .tab button.active { background:#4285f4; color:white; }
     .tabcontent { display:none; }
 
+    .puzzle-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      margin-top: 20px;
+      position: relative;
+    }
+    .puzzle-row {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+    }
     .puzzle-center {
       display:flex;
+      align-items: center;
       justify-content:center;
-      gap:5px; margin-top:10px;
+      gap:5px;
     }
     .puzzle-col {
       display:flex;
@@ -136,20 +150,47 @@
 
       {% for img, img_id, pieces in puzzle_config.full_info_list %}
       <div class="tabcontent" id="p1_tab{{ forloop.counter0 }}" style="{% if forloop.first %}display:block{% endif %}">
-        <div class="puzzle-center">
-          <div class="puzzle-col left">
-            {% for piece_id, piece in pieces|slice:":8" %}
+        <div class="puzzle-wrapper">
+          <!-- up 4 pieces -->
+          <div class="puzzle-row top">
+            {% for piece_id, piece in pieces|slice:":4" %}
               <img src="{% static piece %}"
                    id="p1_{{ img_id }}_{{ piece_id }}"
                    data-tab="{{ forloop.parentloop.counter0 }}"
                    class="piece" draggable="true">
             {% endfor %}
           </div>
-          <div class="dropzone-wrapper" id="p1_tab{{ forloop.counter0 }}_dropzone">
-            <img src="{% static img %}" class="full_image" draggable="false">
+
+          <div class="puzzle-center">
+            <!-- left 4 pieces -->
+            <div class="puzzle-col left">
+              {% for piece_id, piece in pieces|slice:"4:8" %}
+                <img src="{% static piece %}"
+                     id="p1_{{ img_id }}_{{ piece_id }}"
+                     data-tab="{{ forloop.parentloop.counter0 }}"
+                     class="piece" draggable="true">
+              {% endfor %}
+            </div>
+
+            <!-- original img -->
+            <div class="dropzone-wrapper" id="p1_tab{{ forloop.counter0 }}_dropzone">
+              <img src="{% static img %}" class="full_image" draggable="false">
+            </div>
+
+            <!-- right 4 pieces -->
+            <div class="puzzle-col right">
+              {% for piece_id, piece in pieces|slice:"8:12" %}
+                <img src="{% static piece %}"
+                     id="p1_{{ img_id }}_{{ piece_id }}"
+                     data-tab="{{ forloop.parentloop.counter0 }}"
+                     class="piece" draggable="true">
+              {% endfor %}
+            </div>
           </div>
-          <div class="puzzle-col right">
-            {% for piece_id, piece in pieces|slice:"8:" %}
+
+          <!-- down 4 pieces -->
+          <div class="puzzle-row bottom">
+            {% for piece_id, piece in pieces|slice:"12:" %}
               <img src="{% static piece %}"
                    id="p1_{{ img_id }}_{{ piece_id }}"
                    data-tab="{{ forloop.parentloop.counter0 }}"
@@ -177,20 +218,47 @@
 
       {% for img, img_id, pieces in puzzle_config.full_info_list %}
       <div class="tabcontent" id="p2_tab{{ forloop.counter0 }}" style="{% if forloop.first %}display:block{% endif %}">
-        <div class="puzzle-center">
-          <div class="puzzle-col left">
-            {% for piece_id, piece in pieces|slice:":8" %}
+        <div class="puzzle-wrapper">
+          <!-- up 4 pieces -->
+          <div class="puzzle-row top">
+            {% for piece_id, piece in pieces|slice:":4" %}
               <img src="{% static piece %}"
                    id="p2_{{ img_id }}_{{ piece_id }}"
                    data-tab="{{ forloop.parentloop.counter0 }}"
                    class="piece" draggable="true">
             {% endfor %}
           </div>
-          <div class="dropzone-wrapper" id="p2_tab{{ forloop.counter0 }}_dropzone">
-            <img src="{% static img %}" class="full_image" draggable="false">
+
+          <div class="puzzle-center">
+            <!-- left 4 pieces -->
+            <div class="puzzle-col left">
+              {% for piece_id, piece in pieces|slice:"4:8" %}
+                <img src="{% static piece %}"
+                     id="p2_{{ img_id }}_{{ piece_id }}"
+                     data-tab="{{ forloop.parentloop.counter0 }}"
+                     class="piece" draggable="true">
+              {% endfor %}
+            </div>
+
+            <!-- original img -->
+            <div class="dropzone-wrapper" id="p2_tab{{ forloop.counter0 }}_dropzone">
+              <img src="{% static img %}" class="full_image" draggable="false">
+            </div>
+
+            <!-- right 4 pieces -->
+            <div class="puzzle-col right">
+              {% for piece_id, piece in pieces|slice:"8:12" %}
+                <img src="{% static piece %}"
+                     id="p2_{{ img_id }}_{{ piece_id }}"
+                     data-tab="{{ forloop.parentloop.counter0 }}"
+                     class="piece" draggable="true">
+              {% endfor %}
+            </div>
           </div>
-          <div class="puzzle-col right">
-            {% for piece_id, piece in pieces|slice:"8:" %}
+
+          <!-- down 4 pieces -->
+          <div class="puzzle-row bottom">
+            {% for piece_id, piece in pieces|slice:"12:" %}
               <img src="{% static piece %}"
                    id="p2_{{ img_id }}_{{ piece_id }}"
                    data-tab="{{ forloop.parentloop.counter0 }}"
@@ -206,11 +274,17 @@
 
   <div class="actions">
     <form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
-      <button type="submit" class="montessori-btn montessori-btn-red">Exit</button>
+      <button type="submit" class="montessori-btn montessori-btn-red button-with-icon">
+        <img src="{% static 'icons/Exit.png' %}" alt="Exit" class="button-icon">
+        Exit
+      </button>
     </form>
     <form id="view_history" method="POST" action="{% url 'view_history' %}">
       {% csrf_token %}
-      <button type="submit" class="montessori-btn montessori-btn-blue">View History</button>
+      <button type="submit" class="montessori-btn montessori-btn-blue button-with-icon">
+        <img src="{% static 'icons/History.png' %}" alt="History" class="button-icon">
+        View History
+      </button>
     </form>
   </div>
 </div>
