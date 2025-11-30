@@ -45,26 +45,32 @@
     <form method="POST">
       {% csrf_token %}
 
-      <label class="montessori-label">Difficulty:</label>
-      <select name="difficulty" class="montessori-input">
-        {% for d in difficulties %}
-          <option value="{{ d }}">{{ d }}</option>
-        {% endfor %}
-      </select><br>
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+        <label class="montessori-label" style="min-width: 120px; margin-bottom: 0;">Difficulty:</label>
+        <select name="difficulty" class="montessori-input" style="flex: 1;">
+          {% for d in difficulties %}
+            <option value="{{ d }}">{{ d }}</option>
+          {% endfor %}
+        </select>
+      </div>
 
-      <label class="montessori-label">Character:</label>
-      <select name="character" class="montessori-input">
-        {% for c in characters %}
-          <option value="{{ c }}">{{ c }}</option>
-        {% endfor %}
-      </select><br>
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+        <label class="montessori-label" style="min-width: 120px; margin-bottom: 0;">Character:</label>
+        <select name="character" class="montessori-input" style="flex: 1;">
+          {% for c in characters %}
+            <option value="{{ c }}">{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
 
-      <label class="montessori-label">Activity:</label>
-      <select name="activity" class="montessori-input">
-        {% for ac in activities %}
-          <option value="{{ ac }}">{{ ac }}</option>
-        {% endfor %}
-      </select><br>
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+        <label class="montessori-label" style="min-width: 120px; margin-bottom: 0;">Activity:</label>
+        <select name="activity" class="montessori-input" style="flex: 1;">
+          {% for ac in activities %}
+            <option value="{{ ac }}">{{ ac }}</option>
+          {% endfor %}
+        </select>
+      </div>
       {% if mode == 'collaborative' %}
         <div class="ai-checkbox-wrapper">
           <img src="{% static 'icons/Enable AI.png' %}" alt="Enable AI" class="ai-checkbox-icon">
@@ -80,7 +86,10 @@
         </div><br>
       {% endif %}
 
-      <button type="submit" class="montessori-btn montessori-btn-green">Create Puzzle</button>
+      <button type="submit" class="montessori-btn montessori-btn-green button-with-icon">
+        <img src="{% static 'icons/Create puzzle.png' %}" alt="Create Puzzle" class="button-icon">
+        Create Puzzle
+      </button>
     </form>
 
     <form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">

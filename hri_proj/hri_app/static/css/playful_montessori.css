@@ -64,13 +64,16 @@ body{
 /* ===== GLOBAL PILL BUTTONS ===== */
 button, .btn, .montessori-btn, a[role="button"], input[type="submit"]{
   display:inline-flex; align-items:center; justify-content:center; gap:.8ch;
-  min-height:60px; padding:16px 24px;
+  height:60px; /* Fixed height for all buttons */
+  min-height:60px; /* Fallback */
+  padding:16px 24px;
   border:0; border-radius:999px;
   background:var(--brand); color:#ffffff;
   font-weight:1000; font-size:20px; letter-spacing:.2px;
   cursor:pointer; text-decoration:none;
   box-shadow:0 10px 0 rgba(0,0,0,.07);
   transition: transform .08s ease, filter .12s ease, box-shadow .12s ease;
+  box-sizing: border-box; /* Include padding in height */
 }
 button:hover, .btn:hover, .montessori-btn:hover,
 a[role="button"]:hover, input[type="submit"]:hover{ transform:translateY(-2px) }
@@ -181,6 +184,16 @@ input[type="radio"]:checked + .emoji-label{
   grid-template-columns: 140px minmax(260px, 1fr) auto; /* label | input grows | (optional) remove btn */
   align-items:center;
   gap:16px;
+  margin-bottom: 28px; /* Consistent spacing between player rows */
+}
+
+.player_row:last-child {
+  margin-bottom: 0; /* Remove margin from last row */
+}
+
+/* Consistent spacing between player container and button group */
+#player_container {
+  margin-bottom: 28px;
 }
 
 /* Make text inputs match the Montessori field style */
@@ -191,17 +204,21 @@ input[type="radio"]:checked + .emoji-label{
   border:2px dashed #f59e0b77;
   border-radius:14px;
   padding:16px 16px;
-  min-height:56px;
+  height:60px; /* Match button height */
+  min-height:60px;
   font-size:18px;
   color:var(--text);
   width:100%;
+  box-sizing: border-box; /* Include padding in height */
 }
 .montessori-input:focus{ outline:3px dashed #f59e0b; outline-offset:3px }
 
 /* Group the bottom buttons nicely and center them */
 .button-group{
   display:flex;
-  gap:16px;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px; /* Consistent spacing between buttons in group */
   justify-content:center;
   flex-wrap:wrap;
 }
@@ -243,19 +260,36 @@ form > .button-group {
 }
 
 /* Button icon styling - icons appear to the left of buttons */
-.button-icon {
-  height: 60px; /* Match button min-height */
-  width: auto;
-  margin-right: 12px;
-  vertical-align: middle;
-  object-fit: contain;
-}
-
-/* Icon wrapper for buttons - flex container */
 .button-with-icon {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.button-icon {
+  position: absolute;
+  left: 24px; /* Match button padding */
+  height: 60px; /* Match button height */
+  width: auto;
+  vertical-align: middle;
+  object-fit: contain;
+  z-index: 1;
+}
+
+/* Ensure text in buttons with icons is centered */
+.button-with-icon {
+  text-align: center;
+}
+
+/* Make sure text doesn't overlap with icon */
+.button-with-icon:not(:has(.button-icon)) {
+  /* Fallback for browsers without :has support */
+}
+
+.button-with-icon > *:not(.button-icon) {
+  position: relative;
+  z-index: 0;
 }
 
 /* AI checkbox icon styling */
@@ -282,8 +316,11 @@ select, input[type="text"], textarea {
 
 /* === Uniform Montessori Button Widths === */
 .montessori-btn {
-  min-width: 240px;
+  width: 320px; /* Fixed width for all buttons - accommodates icon + text */
+  min-width: 320px; /* Ensure minimum width */
+  max-width: 320px; /* Prevent buttons from growing */
   justify-content: center;
+  box-sizing: border-box; /* Include padding in width calculation */
 }
 
 .button-group {
@@ -297,6 +334,8 @@ select, input[type="text"], textarea {
 @media (max-width: 480px) {
   .montessori-btn {
     width: 100%;
+    min-width: 100%;
+    max-width: 100%;
   }
 }
 

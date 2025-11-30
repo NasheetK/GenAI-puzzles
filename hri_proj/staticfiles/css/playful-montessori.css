@@ -25,13 +25,14 @@ body{
 /* GLOBAL pill buttons */
 button, .btn, .montessori-btn, a[role="button"], input[type="submit"]{
   display:inline-flex; align-items:center; justify-content:center; gap:.8ch;
-  min-height:60px; padding:16px 24px;
+  height:60px; min-height:60px; padding:16px 24px;
   border:0; border-radius:999px;
   background:var(--brand); color:#ffffff;
   font-weight:1000; font-size:20px; letter-spacing:.2px;
   cursor:pointer; text-decoration:none;
   box-shadow:0 10px 0 rgba(0,0,0,.07);
   transition: transform .08s ease;
+  box-sizing:border-box;
 }
 button:hover, .btn:hover, .montessori-btn:hover, a[role="button"]:hover, input[type="submit"]:hover{ transform:translateY(-2px) }
 button:active, .btn:active, .montessori-btn:active, a[role="button"]:active, input[type="submit"]:active{ transform:translateY(0) }
@@ -63,8 +64,13 @@ form > button.montessori-btn, form > .montessori-btn, form > input[type="submit"
 .field{ display:flex; flex-direction:column; gap:10px }
 .field label{ font-weight:900 }
 input[type="text"], input[type="number"], input[type="email"], input[type="search"], select, textarea{
-  background:#fff7ed; border:2px dashed #f59e0b77; border-radius:14px; padding:16px 16px; min-height:56px; font-size:18px; color:var(--text);
+  background:#fff7ed; border:2px dashed #f59e0b77; border-radius:14px; padding:16px 16px; height:60px; min-height:60px; font-size:18px; color:var(--text); box-sizing:border-box;
 }
+.montessori-input{ height:60px; min-height:60px; box-sizing:border-box }
+.player_row{ margin-bottom:28px }
+.player_row:last-child{ margin-bottom:0 }
+#player_container{ margin-bottom:28px }
+.button-group{ display:flex; flex-direction:column; align-items:center; gap:28px; justify-content:center; flex-wrap:wrap }
 input:focus, select:focus, textarea:focus{ outline:3px dashed #f59e0b; outline-offset:3px }
 
 /* Tables */
@@ -85,10 +91,15 @@ input[type="radio"]{ display:none }
 input[type="radio"]:checked + .emoji-label{ background:#fde68a; border-color:#d97706; transform: translateY(-7px) scale(1.08) rotate(-1deg) }
 
 /* Button icon styling - icons appear to the left of buttons */
-.button-icon{ height:60px; width:auto; margin-right:12px; vertical-align:middle; object-fit:contain }
-.button-with-icon{ display:flex; align-items:center; justify-content:center }
+.button-with-icon{ position:relative; display:flex; align-items:center; justify-content:center; text-align:center }
+.button-icon{ position:absolute; left:24px; height:60px; width:auto; vertical-align:middle; object-fit:contain; z-index:1 }
+.button-with-icon > *:not(.button-icon){ position:relative; z-index:0 }
 .ai-checkbox-wrapper{ display:flex; align-items:center; gap:10px }
 .ai-checkbox-icon{ height:60px; width:auto; vertical-align:middle; object-fit:contain }
+
+/* Uniform button widths - all buttons same size */
+.montessori-btn{ width:320px; min-width:320px; max-width:320px; justify-content:center; box-sizing:border-box }
+@media (max-width:480px){ .montessori-btn{ width:100%; min-width:100%; max-width:100% } }
 
 /* Accessibility & reduced motion */
 :focus-visible{ outline:3px dashed #f59e0b; outline-offset:4px; border-radius:14px }

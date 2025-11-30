@@ -47,12 +47,18 @@
 
     <form method="POST">
       {% csrf_token %}
-      <button type="submit" class="montessori-btn montessori-btn-green">Start Puzzle</button>
+      <button type="submit" class="montessori-btn montessori-btn-green button-with-icon">
+        <img src="{% static 'icons/Start.png' %}" alt="Start" class="button-icon">
+        Start Puzzle
+      </button>
     </form>
 
     <form id="view_tutorial" onsubmit="openTutorial(event)">
       {% csrf_token %}
-      <button type="submit" class="montessori-btn montessori-btn-orange">View Tutorial</button>
+      <button type="submit" class="montessori-btn montessori-btn-orange button-with-icon">
+        <img src="{% static 'icons/Tutorial.png' %}" alt="Tutorial" class="button-icon">
+        View Tutorial
+      </button>
     </form>
 
     <form action="{% url 'clear_and_exit' %}" onsubmit="return confirm('Confirm to exit?');">
